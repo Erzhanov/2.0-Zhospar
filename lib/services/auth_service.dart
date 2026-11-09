@@ -1,0 +1,67 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class AuthService {
+  final SupabaseClient _client = Supabase.instance.client;
+
+  User? get currentUser => _client.auth.currentUser;
+  bool get isAuthenticated => _client.auth.currentUser != null;
+
+  Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
+
+  Future<AuthResponse> signIn({
+    required String email,
+    required String password,
+  }) async {
+    return await _client.auth.signInWithPassword(
+      email: email.trim(),
+      password: password,
+    );
+  }
+
+  Future<AuthResponse> signUp({
+    required String email,
+    required String password,
+    String? displayName,
+  }) async {
+    final res = await _client.auth.signUp(
+      email: email.trim(),
+      password: password,
+      data: displayName != null && displayName.isNotEmpty
+          ? {'display_name': displayName.trim()}
+          : null,
+    );
+
+    // Save profile if needed
+    if (res.user != null && displayName != null && displayName.isNotEmpty) {
+      try {
+        await _client.from('profiles').upsert({
+          'user_id': res.user!.id,
+          'display_name': displayName.trim(),
+          'theme': 'light',
+        });
+      } catch (_) {}
+    }
+
+    return res;
+  }
+
+  Future<void> signOut() async {
+    await _client.auth.signOut();
+  }
+
+  Future<bool> checkIsAdmin() async {
+    final user = currentUser;
+    if (user == null) return false;
+    try {
+      final res = await _client
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+      return res != null;
+    } catch (_) {
+      return false;
+    }
+  }
+}

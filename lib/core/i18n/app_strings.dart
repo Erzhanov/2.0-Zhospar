@@ -1,0 +1,458 @@
+class AppStrings {
+  static const Map<String, Map<String, String>> dict = {
+    'kk': {
+      // nav
+      'nav.home': 'Басты бет',
+      'nav.week': 'Апта жоспары',
+      'nav.analytics': 'Аналитика',
+      'nav.assistant': 'AI Көмекші',
+      'nav.timer': 'Таймер',
+      'nav.review': 'Қорытынды',
+      'nav.archive': 'Мұрағат',
+      'nav.settings': 'Баптаулар',
+      'nav.admin': 'Админ',
+      'nav.more': 'Тағы',
+      'nav.menu': 'Мәзір',
+      'nav.close': 'Жабу',
+      'nav.logout': 'Шығу',
+      'nav.appName': 'Апталық Жоспар',
+
+      // common
+      'common.loading': 'Жүктелуде...',
+      'common.save': 'Сақтау',
+      'common.cancel': 'Болдырмау',
+      'common.add': 'Қосу',
+      'common.addTask': 'Тапсырма қосу',
+      'common.today': 'Бүгін',
+      'common.thisWeek': 'Осы апта',
+      'common.prevWeek': 'Алдыңғы апта',
+      'common.nextWeek': 'Келесі апта',
+      'common.tasks': 'тапсырма',
+      'common.done': 'орындалды',
+      'common.search': 'Іздеу...',
+      'common.delete': 'Өшіру',
+      'common.edit': 'Өңдеу',
+      'common.empty': 'Әзірге бос',
+      'common.weekProgress': 'Апта прогресі',
+      'common.all': 'Барлығы',
+      'common.streak': 'Күндік серия',
+      'common.streakDays': 'күн қатарынан',
+
+      // days
+      'day.mon': 'Дүйсенбі',
+      'day.tue': 'Сейсенбі',
+      'day.wed': 'Сәрсенбі',
+      'day.thu': 'Бейсенбі',
+      'day.fri': 'Жұма',
+      'day.sat': 'Сенбі',
+      'day.sun': 'Жексенбі',
+      'day.mon_s': 'Дс',
+      'day.tue_s': 'Сс',
+      'day.wed_s': 'Ср',
+      'day.thu_s': 'Бс',
+      'day.fri_s': 'Жм',
+      'day.sat_s': 'Сн',
+      'day.sun_s': 'Жс',
+
+      // priorities
+      'priority.low': 'Төмен',
+      'priority.med': 'Орта',
+      'priority.high': 'Жоғары',
+
+      // auth
+      'auth.title': 'ZHOSPAR',
+      'auth.subtitle': 'Апталық мақсаттарыңызға бірге жетейік',
+      'auth.login': 'Кіру',
+      'auth.register': 'Тіркелу',
+      'auth.email': 'Email',
+      'auth.password': 'Құпиясөз',
+      'auth.name': 'Аты-жөніңіз',
+      'auth.noAccount': 'Әлі аккаунтыңыз жоқ па?',
+      'auth.haveAccount': 'Аккаунтыңыз бар ма?',
+      'auth.loginSuccess': 'Қош келдіңіз!',
+      'auth.registerSuccess': 'Тіркелу сәтті аяқталды!',
+      'auth.error': 'Қате орын алды',
+
+      // dashboard
+      'dashboard.quote': 'Апталық ұран / мотивация',
+      'dashboard.quoteHint': 'Осы аптадағы басты ұраныңызды жазыңыз...',
+      'dashboard.reflection': 'Бүгінгі рефлексия',
+      'dashboard.reflectionHint': 'Бүгінгі күн қалай өтті? Не үйрендіңіз?',
+      'dashboard.quickActions': 'Жылдам сілтемелер',
+      'dashboard.todayTasks': 'Бүгінгі тапсырмалар',
+
+      // week plan
+      'week.title': 'Апталық Жоспар',
+      'week.dayEmpty': 'Бұл күнге тапсырма қойылмаған',
+
+      // dialogs
+      'dlg.addTask': 'Жаңа тапсырма',
+      'dlg.editTask': 'Тапсырманы өңдеу',
+      'dlg.taskName': 'Тапсырма атауы',
+      'dlg.taskHint': 'Мысалы: Баяндаманы аяқтау',
+      'dlg.desc': 'Сипаттама (міндетті емес)',
+      'dlg.category': 'Категория',
+      'dlg.priority': 'Приоритет',
+      'dlg.day': 'Апта күні',
+      'dlg.time': 'Уақыты (мысалы 14:00)',
+
+      // analytics
+      'analytics.title': 'Аналитика',
+      'analytics.doneRatio': 'Орындалу деңгейі',
+      'analytics.total': 'Барлық тапсырма',
+      'analytics.done': 'Орындалғаны',
+      'analytics.left': 'Қалғаны',
+      'analytics.streak': 'Стрик',
+
+      // timer
+      'timer.title': 'Фокус Таймері',
+      'timer.focus': 'Фокус (Жұмыс)',
+      'timer.shortBreak': 'Қысқа үзіліс',
+      'timer.longBreak': 'Ұзақ үзіліс',
+      'timer.pomodoro': 'Помодоро',
+      'timer.deepWork': 'Терең жұмыс',
+      'timer.study': 'Оқу',
+      'timer.quick': 'Жылдам',
+      'timer.ambientBeats': 'Фокус музыкасы',
+
+      // review
+      'review.title': 'Апталық Қорытынды',
+      'review.desc': 'Өткен аптаға баға беріп, келесі аптаға мақсаттар қойыңыз',
+      'review.q1': '1. Не үйрендім?',
+      'review.q2': '2. Не жақсы өтті?',
+      'review.q3': '3. Не қиын болды?',
+      'review.q4': '4. Нені өзгерту керек?',
+      'review.goals': 'Келесі аптаға 3 басты мақсат:',
+      'review.goal': 'Мақсат',
+      'review.saved': 'Қорытынды сақталды',
+
+      // archive
+      'archive.title': 'Мұрағат',
+      'archive.desc': 'Барлық өткен апталардың тарихы мен жетістіктері',
+      'archive.copyToNext': 'Орындалмағандарды келесі аптаға көшіру',
+      'archive.copied': 'Тапсырмалар келесі аптаға көшірілді',
+
+      // assistant
+      'assistant.title': 'AI Көмекші',
+      'assistant.subtitle': 'Апталық жоспарыңыз бен мақсаттарыңызға көмектеседі',
+      'assistant.hint': 'Сұрағыңызды немесе жоспарыңызды жазыңыз...',
+      'assistant.extractPlan': 'Жоспарды күнтізбеге қосу',
+      'assistant.planReady': 'Жоспар табылды!',
+      'assistant.addTasks': 'Тапсырмаларды енгізу',
+
+      // settings
+      'settings.title': 'Баптаулар',
+      'settings.theme': 'Тема (Көрініс)',
+      'settings.light': 'Жарық (Ашық)',
+      'settings.dark': 'Қараңғы (Dark)',
+      'settings.language': 'Тіл / Язык / Language',
+      'settings.onboarding': 'Нұсқаулықты қайта көрсету',
+      'settings.about': 'Қосымша туралы',
+      'settings.version': 'Нұсқа: 2.0.0 (Flutter)',
+    },
+    'ru': {
+      // nav
+      'nav.home': 'Главная',
+      'nav.week': 'План недели',
+      'nav.analytics': 'Аналитика',
+      'nav.assistant': 'AI Помощник',
+      'nav.timer': 'Таймер',
+      'nav.review': 'Итоги недели',
+      'nav.archive': 'Архив',
+      'nav.settings': 'Настройки',
+      'nav.admin': 'Админ',
+      'nav.more': 'Ещё',
+      'nav.menu': 'Меню',
+      'nav.close': 'Закрыть',
+      'nav.logout': 'Выйти',
+      'nav.appName': 'Недельный План',
+
+      // common
+      'common.loading': 'Загрузка...',
+      'common.save': 'Сохранить',
+      'common.cancel': 'Отмена',
+      'common.add': 'Добавить',
+      'common.addTask': 'Добавить задачу',
+      'common.today': 'Сегодня',
+      'common.thisWeek': 'Текущая неделя',
+      'common.prevWeek': 'Прошлая неделя',
+      'common.nextWeek': 'Следующая неделя',
+      'common.tasks': 'задач',
+      'common.done': 'выполнено',
+      'common.search': 'Поиск...',
+      'common.delete': 'Удалить',
+      'common.edit': 'Редактировать',
+      'common.empty': 'Пока пусто',
+      'common.weekProgress': 'Прогресс недели',
+      'common.all': 'Все',
+      'common.streak': 'Серия дней',
+      'common.streakDays': 'дней подряд',
+
+      // days
+      'day.mon': 'Понедельник',
+      'day.tue': 'Вторник',
+      'day.wed': 'Среда',
+      'day.thu': 'Четверг',
+      'day.fri': 'Пятница',
+      'day.sat': 'Суббота',
+      'day.sun': 'Воскресенье',
+      'day.mon_s': 'Пн',
+      'day.tue_s': 'Вт',
+      'day.wed_s': 'Ср',
+      'day.thu_s': 'Чт',
+      'day.fri_s': 'Пт',
+      'day.sat_s': 'Сб',
+      'day.sun_s': 'Вс',
+
+      // priorities
+      'priority.low': 'Низкий',
+      'priority.med': 'Средний',
+      'priority.high': 'Высокий',
+
+      // auth
+      'auth.title': 'ZHOSPAR',
+      'auth.subtitle': 'Достигайте целей вместе с нами',
+      'auth.login': 'Войти',
+      'auth.register': 'Регистрация',
+      'auth.email': 'Email',
+      'auth.password': 'Пароль',
+      'auth.name': 'Ваше имя',
+      'auth.noAccount': 'Нет аккаунта?',
+      'auth.haveAccount': 'Уже есть аккаунт?',
+      'auth.loginSuccess': 'Добро пожаловать!',
+      'auth.registerSuccess': 'Регистрация прошла успешно!',
+      'auth.error': 'Произошла ошибка',
+
+      // dashboard
+      'dashboard.quote': 'Цитата недели / Мотивация',
+      'dashboard.quoteHint': 'Напишите главный девиз этой недели...',
+      'dashboard.reflection': 'Рефлексия за сегодня',
+      'dashboard.reflectionHint': 'Как прошёл сегодняшний день? Чему научились?',
+      'dashboard.quickActions': 'Быстрые действия',
+      'dashboard.todayTasks': 'Задачи на сегодня',
+
+      // week plan
+      'week.title': 'Недельный План',
+      'week.dayEmpty': 'На этот день задач нет',
+
+      // dialogs
+      'dlg.addTask': 'Новая задача',
+      'dlg.editTask': 'Редактировать задачу',
+      'dlg.taskName': 'Название задачи',
+      'dlg.taskHint': 'Например: Завершить отчёт',
+      'dlg.desc': 'Описание (необязательно)',
+      'dlg.category': 'Категория',
+      'dlg.priority': 'Приоритет',
+      'dlg.day': 'День недели',
+      'dlg.time': 'Время (например 14:00)',
+
+      // analytics
+      'analytics.title': 'Аналитика',
+      'analytics.doneRatio': 'Уровень выполнения',
+      'analytics.total': 'Всего задач',
+      'analytics.done': 'Выполнено',
+      'analytics.left': 'Осталось',
+      'analytics.streak': 'Серия',
+
+      // timer
+      'timer.title': 'Фокус Таймер',
+      'timer.focus': 'Фокус (Работа)',
+      'timer.shortBreak': 'Короткий отдых',
+      'timer.longBreak': 'Длинный отдых',
+      'timer.pomodoro': 'Помодоро',
+      'timer.deepWork': 'Глубокая работа',
+      'timer.study': 'Учёба',
+      'timer.quick': 'Быстрый',
+      'timer.ambientBeats': 'Фоновая музыка',
+
+      // review
+      'review.title': 'Итоги недели',
+      'review.desc': 'Оцените прошедшую неделю и поставьте цели на новую',
+      'review.q1': '1. Чему я научился?',
+      'review.q2': '2. Что прошло хорошо?',
+      'review.q3': '3. Что было сложно?',
+      'review.q4': '4. Что нужно изменить?',
+      'review.goals': '3 главные цели на следующую неделю:',
+      'review.goal': 'Цель',
+      'review.saved': 'Итоги сохранены',
+
+      // archive
+      'archive.title': 'Архив',
+      'archive.desc': 'История и достижения всех предыдущих недель',
+      'archive.copyToNext': 'Перенести невыполненные на след. неделю',
+      'archive.copied': 'Задачи перенесены на следующую неделю',
+
+      // assistant
+      'assistant.title': 'AI Помощник',
+      'assistant.subtitle': 'Помогает составить и оптимизировать план недели',
+      'assistant.hint': 'Задайте вопрос или напишите задачи...',
+      'assistant.extractPlan': 'Импортировать в план',
+      'assistant.planReady': 'План распознан!',
+      'assistant.addTasks': 'Добавить задачи',
+
+      // settings
+      'settings.title': 'Настройки',
+      'settings.theme': 'Тема оформления',
+      'settings.light': 'Светлая',
+      'settings.dark': 'Тёмная',
+      'settings.language': 'Язык / Тіл / Language',
+      'settings.onboarding': 'Показать обучение заново',
+      'settings.about': 'О приложении',
+      'settings.version': 'Версия: 2.0.0 (Flutter)',
+    },
+    'en': {
+      // nav
+      'nav.home': 'Home',
+      'nav.week': 'Weekly Plan',
+      'nav.analytics': 'Analytics',
+      'nav.assistant': 'AI Assistant',
+      'nav.timer': 'Timer',
+      'nav.review': 'Weekly Review',
+      'nav.archive': 'Archive',
+      'nav.settings': 'Settings',
+      'nav.admin': 'Admin',
+      'nav.more': 'More',
+      'nav.menu': 'Menu',
+      'nav.close': 'Close',
+      'nav.logout': 'Sign Out',
+      'nav.appName': 'Weekly Planner',
+
+      // common
+      'common.loading': 'Loading...',
+      'common.save': 'Save',
+      'common.cancel': 'Cancel',
+      'common.add': 'Add',
+      'common.addTask': 'Add Task',
+      'common.today': 'Today',
+      'common.thisWeek': 'This Week',
+      'common.prevWeek': 'Previous Week',
+      'common.nextWeek': 'Next Week',
+      'common.tasks': 'tasks',
+      'common.done': 'done',
+      'common.search': 'Search...',
+      'common.delete': 'Delete',
+      'common.edit': 'Edit',
+      'common.empty': 'Empty for now',
+      'common.weekProgress': 'Week Progress',
+      'common.all': 'All',
+      'common.streak': 'Daily Streak',
+      'common.streakDays': 'days in a row',
+
+      // days
+      'day.mon': 'Monday',
+      'day.tue': 'Tuesday',
+      'day.wed': 'Wednesday',
+      'day.thu': 'Thursday',
+      'day.fri': 'Friday',
+      'day.sat': 'Saturday',
+      'day.sun': 'Sunday',
+      'day.mon_s': 'Mo',
+      'day.tue_s': 'Tu',
+      'day.wed_s': 'We',
+      'day.thu_s': 'Th',
+      'day.fri_s': 'Fr',
+      'day.sat_s': 'Sa',
+      'day.sun_s': 'Su',
+
+      // priorities
+      'priority.low': 'Low',
+      'priority.med': 'Medium',
+      'priority.high': 'High',
+
+      // auth
+      'auth.title': 'ZHOSPAR',
+      'auth.subtitle': 'Achieve your weekly goals together',
+      'auth.login': 'Sign In',
+      'auth.register': 'Sign Up',
+      'auth.email': 'Email',
+      'auth.password': 'Password',
+      'auth.name': 'Your Name',
+      'auth.noAccount': "Don't have an account?",
+      'auth.haveAccount': 'Already have an account?',
+      'auth.loginSuccess': 'Welcome back!',
+      'auth.registerSuccess': 'Signed up successfully!',
+      'auth.error': 'An error occurred',
+
+      // dashboard
+      'dashboard.quote': 'Weekly Motto / Motivation',
+      'dashboard.quoteHint': "Enter this week's main motivation...",
+      'dashboard.reflection': "Today's Reflection",
+      'dashboard.reflectionHint': 'How was your day? What did you learn?',
+      'dashboard.quickActions': 'Quick Actions',
+      'dashboard.todayTasks': "Today's Tasks",
+
+      // week plan
+      'week.title': 'Weekly Plan',
+      'week.dayEmpty': 'No tasks for this day',
+
+      // dialogs
+      'dlg.addTask': 'New Task',
+      'dlg.editTask': 'Edit Task',
+      'dlg.taskName': 'Task title',
+      'dlg.taskHint': 'E.g., Complete project report',
+      'dlg.desc': 'Description (optional)',
+      'dlg.category': 'Category',
+      'dlg.priority': 'Priority',
+      'dlg.day': 'Day of week',
+      'dlg.time': 'Time (e.g. 14:00)',
+
+      // analytics
+      'analytics.title': 'Analytics',
+      'analytics.doneRatio': 'Completion Rate',
+      'analytics.total': 'Total Tasks',
+      'analytics.done': 'Completed',
+      'analytics.left': 'Remaining',
+      'analytics.streak': 'Streak',
+
+      // timer
+      'timer.title': 'Focus Timer',
+      'timer.focus': 'Focus (Work)',
+      'timer.shortBreak': 'Short Break',
+      'timer.longBreak': 'Long Break',
+      'timer.pomodoro': 'Pomodoro',
+      'timer.deepWork': 'Deep Work',
+      'timer.study': 'Study',
+      'timer.quick': 'Quick',
+      'timer.ambientBeats': 'Ambient Focus Music',
+
+      // review
+      'review.title': 'Weekly Review',
+      'review.desc': 'Reflect on your past week and set goals for the next',
+      'review.q1': '1. What did I learn?',
+      'review.q2': '2. What went well?',
+      'review.q3': '3. What was challenging?',
+      'review.q4': '4. What needs to change?',
+      'review.goals': '3 Main Goals for Next Week:',
+      'review.goal': 'Goal',
+      'review.saved': 'Review saved',
+
+      // archive
+      'archive.title': 'Archive',
+      'archive.desc': 'History and accomplishments of all previous weeks',
+      'archive.copyToNext': 'Copy unfinished tasks to next week',
+      'archive.copied': 'Tasks copied to next week',
+
+      // assistant
+      'assistant.title': 'AI Assistant',
+      'assistant.subtitle': 'Helps you craft and organize your weekly schedule',
+      'assistant.hint': 'Ask a question or enter your plans...',
+      'assistant.extractPlan': 'Import to calendar',
+      'assistant.planReady': 'Plan found!',
+      'assistant.addTasks': 'Add Tasks',
+
+      // settings
+      'settings.title': 'Settings',
+      'settings.theme': 'App Theme',
+      'settings.light': 'Light',
+      'settings.dark': 'Dark',
+      'settings.language': 'Language / Тіл / Язык',
+      'settings.onboarding': 'Restart Onboarding',
+      'settings.about': 'About App',
+      'settings.version': 'Version: 2.0.0 (Flutter)',
+    },
+  };
+
+  static String get(String key, String lang) {
+    return dict[lang]?[key] ?? dict['kk']?[key] ?? key;
+  }
+}
