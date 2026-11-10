@@ -6,7 +6,10 @@ import 'package:provider/provider.dart';
 import '../../core/i18n/language_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/music_provider.dart';
+import '../../widgets/common/ambient_space_background.dart';
 import '../../widgets/common/app_card.dart';
+import '../../widgets/common/floating_motion.dart';
+import '../../widgets/common/glass_surface.dart';
 import '../../widgets/common/mobile_page_container.dart';
 import '../../widgets/common/tap_scale.dart';
 import '../../widgets/floating_music_player.dart';
@@ -145,25 +148,26 @@ class _TimerScreenState extends State<TimerScreen> {
         break;
     }
 
-    return Scaffold(
-      appBar: TopAppBar(
-        title: lang.t('timer.title'),
-        isSubPage: true,
-      ),
-      body: SafeArea(
-        top: false,
-        child: Stack(
+    return AmbientSpaceBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: TopAppBar(
+          title: lang.t('timer.title'),
+          isSubPage: true,
+        ),
+        body: Stack(
           children: [
             SingleChildScrollView(
               child: MobilePageContainer(
-                bottomClearance: music.showPlayer ? 104 : 32,
+                bottomClearance: music.showPlayer ? 104 : 36,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // Mode Tabs (>= 44px height)
                     AppCard(
                       padding: const EdgeInsets.all(4),
-                      borderRadius: 18,
+                      borderRadius: 20,
                       child: Row(
                         children: [
                           _modeTab(
@@ -184,58 +188,69 @@ class _TimerScreenState extends State<TimerScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 28),
 
-                    // Circular Countdown Timer
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox(
-                          width: dialSize,
-                          height: dialSize,
-                          child: CircularProgressIndicator(
-                            value: progress,
-                            strokeWidth: 10,
-                            backgroundColor: isDark
-                                ? Colors.white10
-                                : Colors.black.withValues(alpha: 0.06),
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(modeColor),
-                          ),
-                        ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
+                    // Levitating Glass Countdown Orb
+                    FloatingDrift(
+                      amplitude: 4.5,
+                      child: GlassSurface(
+                        enableBlur: true,
+                        borderRadius: dialSize,
+                        glowColor: modeColor,
+                        elevation: 1.3,
+                        padding: const EdgeInsets.all(14),
+                        child: Stack(
+                          alignment: Alignment.center,
                           children: [
-                            Text(
-                              _formatTime(_secondsLeft),
-                              style: const TextStyle(
-                                fontSize: 46,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -1,
+                            SizedBox(
+                              width: dialSize,
+                              height: dialSize,
+                              child: CircularProgressIndicator(
+                                value: progress,
+                                strokeWidth: 11,
+                                strokeCap: StrokeCap.round,
+                                backgroundColor: isDark
+                                    ? Colors.white10
+                                    : Colors.black.withValues(alpha: 0.06),
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(modeColor),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: modeColor.withValues(alpha: 0.14),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                modeLabel,
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: modeColor,
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _formatTime(_secondsLeft),
+                                  style: const TextStyle(
+                                    fontSize: 46,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -1,
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: modeColor.withValues(alpha: 0.14),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    modeLabel,
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: modeColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 30),
 

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/common/ambient_space_background.dart';
+import '../../widgets/common/brand_logo.dart';
+import '../../widgets/common/floating_motion.dart';
 import '../app_shell.dart';
 import 'auth_screen.dart';
 
 /// Root authentication gate.
-///
-/// Renders [AuthScreen] as the default initial view for unauthenticated users
-/// and switches to [AppShell] (main dashboard/home) only after authentication.
 class AuthGate extends StatelessWidget {
   final int initialTabIndex;
 
@@ -30,7 +30,7 @@ class AuthGate extends StatelessWidget {
     }
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 260),
+      duration: const Duration(milliseconds: 280),
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       child: child,
@@ -43,12 +43,25 @@ class _AuthSplash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: SizedBox(
-          width: 32,
-          height: 32,
-          child: CircularProgressIndicator(strokeWidth: 2.5),
+    return const AmbientSpaceBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FloatingDrift(
+                amplitude: 5,
+                child: BrandLogo(size: 80, borderRadius: 24, showShadow: true),
+              ),
+              SizedBox(height: 22),
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+            ],
+          ),
         ),
       ),
     );

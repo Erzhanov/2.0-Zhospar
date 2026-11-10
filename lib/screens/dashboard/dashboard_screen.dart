@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/i18n/language_provider.dart';
+import '../../core/routing/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/week_utils.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/task_provider.dart';
 import '../../widgets/add_task_dialog.dart';
 import '../../widgets/common/app_card.dart';
+import '../../widgets/common/floating_motion.dart';
+import '../../widgets/common/glass_surface.dart';
 import '../../widgets/common/mobile_page_container.dart';
 import '../../widgets/common/tap_scale.dart';
 import '../../widgets/day_selector_bar.dart';
@@ -49,79 +52,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 16,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white24 : Colors.black12,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 12,
+              right: 12,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 12,
+            ),
+            child: GlassSurface(
+              enableBlur: true,
+              borderRadius: 28,
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(
-                    Icons.format_quote_rounded,
-                    color: AppColors.purple,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      lang.t('dashboard.quote'),
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
+                  Center(
+                    child: Container(
+                      width: 38,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.black12,
+                        borderRadius: BorderRadius.circular(2),
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.format_quote_rounded,
+                        color: AppColors.warning,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          lang.t('dashboard.quote'),
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: quoteController,
+                    autofocus: true,
+                    maxLines: 3,
+                    style: const TextStyle(fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: lang.t('dashboard.quoteHint'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await taskProvider.saveQuote(quoteController.text.trim());
+                      if (ctx.mounted) Navigator.pop(ctx);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primary,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 48),
+                    ),
+                    child: Text(
+                      lang.t('common.save'),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: quoteController,
-                autofocus: true,
-                maxLines: 3,
-                style: const TextStyle(fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: lang.t('dashboard.quoteHint'),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () async {
-                  await taskProvider.saveQuote(quoteController.text.trim());
-                  if (ctx.mounted) Navigator.pop(ctx);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primary,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 48),
-                ),
-                child: Text(
-                  lang.t('common.save'),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -135,6 +142,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final auth = Provider.of<AuthProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final accent = isDark ? AppColors.darkPrimaryBright : primary;
 
     final weekRange = WeekUtils.formatWeekRange(
       taskProvider.weekStartDate,
@@ -147,17 +155,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     final dayNames = lang.getDayNames();
+    final allDayTasks = taskProvider.selectedDayTasks;
+    final todoCount = allDayTasks.where((t) => !t.isDone).length;
+    final doneCount = allDayTasks.where((t) => t.isDone).length;
 
-    var dayTasks = taskProvider.selectedDayTasks;
+    var visibleTasks = allDayTasks;
     if (_taskFilter == 'todo') {
-      dayTasks = dayTasks.where((t) => !t.isDone).toList();
+      visibleTasks = allDayTasks.where((t) => !t.isDone).toList();
     } else if (_taskFilter == 'done') {
-      dayTasks = dayTasks.where((t) => t.isDone).toList();
+      visibleTasks = allDayTasks.where((t) => t.isDone).toList();
     }
 
     final userEmail = auth.user?.email ?? '';
     final userName = auth.user?.userMetadata?['display_name'] as String? ??
         (userEmail.isNotEmpty ? userEmail.split('@').first : 'ZHOSPAR');
+    final progressRatio = taskProvider.totalCount > 0
+        ? taskProvider.doneCount / taskProvider.totalCount
+        : 0.0;
 
     return RefreshIndicator(
       onRefresh: () => taskProvider.loadWeek(taskProvider.weekStartDate),
@@ -169,7 +183,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Top Greeting & Streak ──
+              // ── Greeting Header + Weightless Streak Pill ──
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -182,9 +196,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.4,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -192,7 +206,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           weekRange,
                           style: TextStyle(
                             fontSize: 13,
-                            color: isDark ? Colors.white60 : Colors.black54,
+                            color: isDark
+                                ? AppColors.darkSecondaryText
+                                : AppColors.lightSecondaryText,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -200,22 +216,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Container(
+                  GlassSurface(
+                    borderRadius: 16,
+                    glowColor: AppColors.warning,
+                    elevation: 0.7,
+                    tintColor: AppColors.warning.withValues(alpha: 0.14),
+                    borderColor: AppColors.warning.withValues(alpha: 0.35),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 8,
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: AppColors.warning.withValues(alpha: 0.3),
-                      ),
-                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('🔥 ', style: TextStyle(fontSize: 14)),
+                        const Text('🔥', style: TextStyle(fontSize: 14)),
+                        const SizedBox(width: 5),
                         Text(
                           '${taskProvider.streakCount} ${lang.t('common.streakDays')}',
                           style: const TextStyle(
@@ -229,114 +244,152 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
 
-              // ── Week Progress Hero ──
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCard : AppColors.lightPrimary,
-                  borderRadius: BorderRadius.circular(22),
-                  gradient: isDark
-                      ? null
-                      : const LinearGradient(
-                          colors: [Color(0xFF007AFF), Color(0xFF0056D2)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                  border: Border.all(
-                    color: isDark ? AppColors.darkBorder : Colors.transparent,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isDark ? Colors.black : AppColors.lightPrimary)
-                          .withValues(alpha: 0.22),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+              // ── Levitating Zero-G Hero Card ──
+              GlassSurface(
+                enableBlur: true,
+                borderRadius: 26,
+                glowColor: accent,
+                elevation: 1.3,
+                borderColor: Colors.white.withValues(alpha: isDark ? 0.22 : 0.65),
+                gradient: LinearGradient(
+                  colors: isDark
+                      ? [
+                          const Color(0xCC0D4B45),
+                          const Color(0xCC1E1B4B),
+                        ]
+                      : [
+                          AppColors.lightPrimary.withValues(alpha: 0.92),
+                          const Color(0xE60D9488),
+                        ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: const EdgeInsets.all(22),
+                child: Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
                             lang.t('common.weekProgress').toUpperCase(),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: Colors.white70,
-                              letterSpacing: 0.6,
+                              letterSpacing: 0.8,
                             ),
                           ),
-                        ),
-                        Text(
-                          '${taskProvider.completionPct}%',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
+                          const SizedBox(height: 6),
+                          Text(
+                            '${taskProvider.doneCount} / ${taskProvider.totalCount} ${lang.t('common.tasks')}',
+                            style: const TextStyle(
+                              fontSize: 18.5,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: taskProvider.totalCount > 0
-                            ? taskProvider.doneCount / taskProvider.totalCount
-                            : 0.0,
-                        backgroundColor: Colors.white.withValues(alpha: 0.24),
-                        valueColor:
-                            const AlwaysStoppedAnimation<Color>(Colors.white),
-                        minHeight: 8,
+                          const SizedBox(height: 14),
+                          Wrap(
+                            spacing: 16,
+                            runSpacing: 6,
+                            children: [
+                              _heroCounter(
+                                lang.t('dashboard.total'),
+                                '${taskProvider.totalCount}',
+                              ),
+                              _heroCounter(
+                                lang.t('dashboard.done'),
+                                '${taskProvider.doneCount}',
+                              ),
+                              _heroCounter(
+                                lang.t('dashboard.left'),
+                                '${taskProvider.totalCount - taskProvider.doneCount}',
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _heroCounter(
-                          lang.t('dashboard.total'),
-                          '${taskProvider.totalCount}',
-                        ),
-                        _heroCounter(
-                          lang.t('dashboard.done'),
-                          '${taskProvider.doneCount}',
-                        ),
-                        _heroCounter(
-                          lang.t('dashboard.left'),
-                          '${taskProvider.totalCount - taskProvider.doneCount}',
-                        ),
-                      ],
+                    const SizedBox(width: 14),
+                    FloatingDrift(
+                      amplitude: 3.5,
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween<double>(begin: 0, end: progressRatio),
+                        duration: const Duration(milliseconds: 560),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, value, _) {
+                          return SizedBox(
+                            width: 74,
+                            height: 74,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 74,
+                                  height: 74,
+                                  child: CircularProgressIndicator(
+                                    value: value,
+                                    strokeWidth: 7,
+                                    strokeCap: StrokeCap.round,
+                                    backgroundColor:
+                                        Colors.white.withValues(alpha: 0.2),
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  '${taskProvider.completionPct}%',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
-              // ── Weekly Quote Card (>= 44px touch target) ──
+              // ── Weightless Weekly Quote Strip ──
               TapScale(
                 onTap: () =>
                     _showQuoteDialog(context, taskProvider, lang, isDark),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(20),
                 child: AppCard(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 14,
                   ),
+                  borderRadius: 20,
+                  glowColor: AppColors.warning,
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.format_quote_rounded,
-                        size: 22,
-                        color: AppColors.purple,
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: AppColors.warning,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.warning.withValues(alpha: 0.55),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           taskProvider.currentWeek?.quote.isNotEmpty == true
@@ -345,10 +398,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           style: TextStyle(
                             fontSize: 13.5,
                             fontStyle: FontStyle.italic,
-                            height: 1.35,
+                            height: 1.4,
                             color: taskProvider.currentWeek?.quote.isNotEmpty ==
                                     true
-                                ? (isDark ? Colors.white : Colors.black87)
+                                ? (isDark
+                                    ? AppColors.darkForeground
+                                    : AppColors.lightForeground)
                                 : (isDark ? Colors.white38 : Colors.black38),
                           ),
                           maxLines: 2,
@@ -365,9 +420,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
 
-              // ── Day Selector (Mon..Sun) ──
+              // ── Floating Day Selector ──
               DaySelectorBar(
                 weekStartDate: taskProvider.weekStartDate,
                 selectedDay: taskProvider.selectedDay,
@@ -375,52 +430,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 lang: lang,
                 onSelectDay: taskProvider.selectDay,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
 
-              // ── Day Header & Mobile-Friendly Filter Bar ──
-              Text(
-                '${dayNames[taskProvider.selectedDay - 1]} (${dayTasks.length})',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 10),
+              // ── Day Header & Floating Segmented Filter Capsule ──
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: _filterPill(
-                      'all',
-                      lang.t('common.all'),
-                      isDark,
-                      primary,
+                    child: Text(
+                      dayNames[taskProvider.selectedDay - 1],
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _filterPill(
-                      'todo',
-                      lang.t('dashboard.filterTodo'),
-                      isDark,
-                      primary,
+                  GlassSurface(
+                    elevation: 0.4,
+                    borderRadius: 12,
+                    tintColor: accent.withValues(alpha: isDark ? 0.16 : 0.10),
+                    borderColor: accent.withValues(alpha: 0.25),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _filterPill(
-                      'done',
-                      lang.t('dashboard.filterDone'),
-                      isDark,
-                      primary,
+                    child: Text(
+                      '${visibleTasks.length} ${lang.t('common.tasks')}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: accent,
+                      ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
+              _TaskFilterBar(
+                activeFilter: _taskFilter,
+                allLabel: '${lang.t('common.all')} (${allDayTasks.length})',
+                todoLabel: '${lang.t('dashboard.filterTodo')} ($todoCount)',
+                doneLabel: '${lang.t('dashboard.filterDone')} ($doneCount)',
+                primary: primary,
+                accent: accent,
+                isDark: isDark,
+                onChanged: (id) => setState(() => _taskFilter = id),
+              ),
+              const SizedBox(height: 14),
 
               // ── Tasks List ──
-              if (dayTasks.isEmpty)
+              if (visibleTasks.isEmpty)
                 AppCard(
                   padding: const EdgeInsets.symmetric(
                     vertical: 32,
@@ -428,22 +488,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.checklist_rounded,
-                        size: 40,
-                        color: isDark ? Colors.white24 : Colors.black12,
+                      Container(
+                        width: 54,
+                        height: 54,
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.checklist_rounded,
+                          size: 28,
+                          color: accent,
+                        ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                       Text(
                         lang.t('week.dayEmpty'),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
-                          color: isDark ? Colors.white54 : Colors.black45,
+                          color: isDark
+                              ? AppColors.darkSecondaryText
+                              : AppColors.lightSecondaryText,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 16),
                       OutlinedButton.icon(
                         onPressed: () {
                           showDialog(
@@ -460,7 +530,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 )
               else
-                ...dayTasks.map((task) {
+                ...visibleTasks.map((task) {
                   return TaskItemWidget(
                     task: task,
                     onEdit: () {
@@ -471,10 +541,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     },
                   );
                 }),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
-              // ── Daily Reflection Card ──
+              // ── Daily Reflection Glass Card ──
               AppCard(
+                glowColor: AppColors.teal,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -497,7 +568,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: _reflectionController,
                       maxLines: 3,
@@ -529,7 +600,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primary,
                           foregroundColor: Colors.white,
-                          minimumSize: const Size(110, 44),
+                          minimumSize: const Size(112, 44),
                         ),
                         child: Text(
                           lang.t('common.save'),
@@ -543,9 +614,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 22),
 
-              // ── Quick Actions Grid (Mobile-First Responsive) ──
+              // ── Quick Tools Strip ──
               Text(
                 lang.t('dashboard.quickActions'),
                 style: const TextStyle(
@@ -556,32 +627,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 12),
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final cols = constraints.maxWidth < 340 ? 2 : 3;
+                  final cols = constraints.maxWidth < 340 ? 1 : 2;
                   return GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: cols,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: cols == 2 ? 1.45 : 1.08,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    mainAxisExtent: 68,
                     children: [
                       _quickActionTile(
-                        icon: Icons.calendar_month_rounded,
-                        label: lang.t('nav.week'),
-                        color: AppColors.lightPrimary,
-                        onTap: () => widget.onNavigateTab?.call(1),
+                        icon: Icons.timer_outlined,
+                        label: lang.t('nav.timer'),
+                        color: AppColors.teal,
+                        onTap: () =>
+                            Navigator.of(context).pushNamed(AppRoutes.timer),
+                      ),
+                      _quickActionTile(
+                        icon: Icons.rate_review_outlined,
+                        label: lang.t('nav.review'),
+                        color: AppColors.purple,
+                        onTap: () => Navigator.of(context)
+                            .pushNamed(AppRoutes.weeklyReview),
+                      ),
+                      _quickActionTile(
+                        icon: Icons.archive_outlined,
+                        label: lang.t('nav.archive'),
+                        color: AppColors.warning,
+                        onTap: () =>
+                            Navigator.of(context).pushNamed(AppRoutes.archive),
                       ),
                       _quickActionTile(
                         icon: Icons.auto_awesome_rounded,
                         label: lang.t('nav.assistant'),
-                        color: AppColors.purple,
+                        color: accent,
                         onTap: () => widget.onNavigateTab?.call(3),
-                      ),
-                      _quickActionTile(
-                        icon: Icons.bar_chart_rounded,
-                        label: lang.t('nav.analytics'),
-                        color: AppColors.teal,
-                        onTap: () => widget.onNavigateTab?.call(2),
                       ),
                     ],
                   );
@@ -597,11 +677,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _heroCounter(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           value,
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 16,
             fontWeight: FontWeight.w900,
             color: Colors.white,
           ),
@@ -609,57 +690,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 11.5,
+            fontSize: 11,
             color: Colors.white70,
             fontWeight: FontWeight.w500,
           ),
         ),
       ],
-    );
-  }
-
-  Widget _filterPill(
-    String id,
-    String label,
-    bool isDark,
-    Color primary,
-  ) {
-    final active = _taskFilter == id;
-    return TapScale(
-      onTap: () => setState(() => _taskFilter = id),
-      minHeight: 44,
-      borderRadius: BorderRadius.circular(12),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOutCubic,
-        height: 44,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: active
-              ? primary
-              : (isDark
-                  ? AppColors.darkCard
-                  : AppColors.lightCard),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: active
-                ? Colors.transparent
-                : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-          ),
-        ),
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: active ? FontWeight.w700 : FontWeight.w600,
-            color: active
-                ? Colors.white
-                : (isDark ? Colors.white70 : Colors.black87),
-          ),
-        ),
-      ),
     );
   }
 
@@ -671,32 +707,155 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return TapScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       child: AppCard(
-        padding: const EdgeInsets.all(10),
-        borderRadius: 18,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        borderRadius: 20,
+        glowColor: color,
+        child: Row(
           children: [
             Container(
               width: 40,
               height: 40,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(13),
               ),
-              child: Icon(icon, color: color, size: 21),
+              child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TaskFilterBar extends StatelessWidget {
+  final String activeFilter;
+  final String allLabel;
+  final String todoLabel;
+  final String doneLabel;
+  final Color primary;
+  final Color accent;
+  final bool isDark;
+  final ValueChanged<String> onChanged;
+
+  const _TaskFilterBar({
+    required this.activeFilter,
+    required this.allLabel,
+    required this.todoLabel,
+    required this.doneLabel,
+    required this.primary,
+    required this.accent,
+    required this.isDark,
+    required this.onChanged,
+  });
+
+  int get _activeIndex {
+    switch (activeFilter) {
+      case 'todo':
+        return 1;
+      case 'done':
+        return 2;
+      default:
+        return 0;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = isDark
+        ? Colors.white.withValues(alpha: 0.06)
+        : Colors.white.withValues(alpha: 0.55);
+    final pillColor =
+        isDark ? primary : Colors.white.withValues(alpha: 0.96);
+    final items = [
+      ('all', allLabel),
+      ('todo', todoLabel),
+      ('done', doneLabel),
+    ];
+
+    return Container(
+      height: 46,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.rimBorder(isDark)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final slotWidth = constraints.maxWidth / 3;
+          return Stack(
+            children: [
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutCubic,
+                left: _activeIndex * slotWidth,
+                top: 0,
+                bottom: 0,
+                width: slotWidth,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: pillColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: AppColors.floatingShadows(
+                      isDark: isDark,
+                      glowColor: accent,
+                      elevation: 0.45,
+                    ),
+                  ),
+                ),
+              ),
+              Row(
+                children: items.map((entry) {
+                  final active = activeFilter == entry.$1;
+                  return Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        onChanged(entry.$1);
+                      },
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(
+                            entry.$2,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight:
+                                  active ? FontWeight.w700 : FontWeight.w600,
+                              color: active
+                                  ? (isDark ? Colors.white : primary)
+                                  : (isDark
+                                      ? AppColors.darkSecondaryText
+                                      : AppColors.lightSecondaryText),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

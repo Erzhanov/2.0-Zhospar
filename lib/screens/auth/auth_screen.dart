@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -6,7 +7,10 @@ import '../../core/routing/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../widgets/common/ambient_space_background.dart';
 import '../../widgets/common/app_card.dart';
+import '../../widgets/common/brand_logo.dart';
+import '../../widgets/common/floating_motion.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -56,7 +60,9 @@ class _AuthScreenState extends State<AuthScreen> {
           displayName: _nameController.text.trim(),
         );
 
-        if (!result.authenticated && result.requiresEmailConfirmation && mounted) {
+        if (!result.authenticated &&
+            result.requiresEmailConfirmation &&
+            mounted) {
           setState(() {
             _isLogin = true;
             _infoMessage = lang.t('auth.confirmEmail');
@@ -99,373 +105,404 @@ class _AuthScreenState extends State<AuthScreen> {
     final theme = Provider.of<ThemeProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final accent = isDark ? AppColors.darkPrimaryBright : primary;
     final canPop = Navigator.of(context).canPop();
 
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Sticky utility top bar with >=44x44px touch targets
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                    width: 0.7,
-                  ),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (canPop)
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded),
-                      tooltip: lang.t('nav.back'),
-                      onPressed: () => Navigator.of(context).pop(),
-                      constraints: const BoxConstraints(
-                        minWidth: 44,
-                        minHeight: 44,
-                      ),
-                    )
-                  else
-                    Flexible(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(width: 4),
-                          Container(
-                            width: 34,
-                            height: 34,
-                            decoration: BoxDecoration(
-                              color: primary,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Icons.calendar_month_rounded,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          const Flexible(
-                            child: Text(
-                              'ZHOSPAR',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.4,
-                              ),
-                            ),
-                          ),
-                        ],
+    return AmbientSpaceBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Frosted floating utility top bar
+              ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0x800B1222)
+                          : Colors.white.withValues(alpha: 0.65),
+                      border: Border(
+                        bottom: BorderSide(color: AppColors.rimBorder(isDark)),
                       ),
                     ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _languageMenuButton(lang, isDark, primary),
-                      const SizedBox(width: 4),
-                      IconButton(
-                        icon: Icon(
-                          isDark
-                              ? Icons.light_mode_outlined
-                              : Icons.dark_mode_outlined,
-                          size: 20,
-                        ),
-                        tooltip: isDark
-                            ? lang.t('settings.light')
-                            : lang.t('settings.dark'),
-                        onPressed: () {
-                          HapticFeedback.selectionClick();
-                          theme.toggleTheme();
-                        },
-                        constraints: const BoxConstraints(
-                          minWidth: 44,
-                          minHeight: 44,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Scrollable vertical mobile-first auth form
-            Expanded(
-              child: Center(
-                child: SingleChildScrollView(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 20,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Brand badge & headline
-                          Center(
-                            child: Container(
-                              width: 58,
-                              height: 58,
-                              decoration: BoxDecoration(
-                                color: primary,
-                                borderRadius: BorderRadius.circular(18),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: primary.withValues(alpha: 0.28),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.calendar_month_rounded,
-                                color: Colors.white,
-                                size: 30,
-                              ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (canPop)
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back_rounded),
+                            tooltip: lang.t('nav.back'),
+                            onPressed: () => Navigator.of(context).pop(),
+                            constraints: const BoxConstraints(
+                              minWidth: 44,
+                              minHeight: 44,
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
-                            child: Text(
-                              _isLogin
-                                  ? lang.t('auth.login')
-                                  : lang.t('auth.register'),
-                              key: ValueKey<bool>(_isLogin),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.6,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            lang.t('auth.subtitle'),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              height: 1.4,
-                              color: isDark ? Colors.white60 : Colors.black54,
-                            ),
-                          ),
-                          const SizedBox(height: 22),
-
-                          // Segmented Login / Sign Up Switcher
-                          _AuthModeToggle(
-                            isLogin: _isLogin,
-                            loginLabel: lang.t('auth.login'),
-                            registerLabel: lang.t('auth.register'),
-                            primary: primary,
-                            isDark: isDark,
-                            onChanged: _switchMode,
-                          ),
-                          const SizedBox(height: 18),
-
-                          AppCard(
-                            padding: const EdgeInsets.all(18),
-                            borderRadius: 22,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                          )
+                        else
+                          Flexible(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (_errorMessage != null)
-                                  _statusBanner(
-                                    message: _errorMessage!,
-                                    color: AppColors.destructive,
-                                    icon: Icons.error_outline_rounded,
-                                  ),
-                                if (_infoMessage != null)
-                                  _statusBanner(
-                                    message: _infoMessage!,
-                                    color: AppColors.success,
-                                    icon: Icons.mark_email_read_outlined,
-                                  ),
-
-                                // Animated Name Field on registration
-                                AnimatedSize(
-                                  duration: const Duration(milliseconds: 220),
-                                  curve: Curves.easeOutCubic,
-                                  child: _isLogin
-                                      ? const SizedBox.shrink()
-                                      : Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            _fieldLabel(
-                                              lang.t('auth.name'),
-                                              isDark,
-                                            ),
-                                            const SizedBox(height: 6),
-                                            TextFormField(
-                                              controller: _nameController,
-                                              textInputAction:
-                                                  TextInputAction.next,
-                                              decoration: InputDecoration(
-                                                hintText: lang.t('auth.name'),
-                                                prefixIcon: const Icon(
-                                                  Icons.person_outline_rounded,
-                                                  size: 20,
-                                                ),
-                                              ),
-                                              validator: (v) {
-                                                if (!_isLogin &&
-                                                    (v == null ||
-                                                        v.trim().isEmpty)) {
-                                                  return lang.t('auth.name');
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                            const SizedBox(height: 16),
-                                          ],
+                                const SizedBox(width: 4),
+                                const BrandLogo(size: 34, borderRadius: 11),
+                                const SizedBox(width: 10),
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        'ZHOSPAR',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 15.5,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: -0.4,
                                         ),
-                                ),
-
-                                _fieldLabel(lang.t('auth.email'), isDark),
-                                const SizedBox(height: 6),
-                                TextFormField(
-                                  controller: _emailController,
-                                  keyboardType: TextInputType.emailAddress,
-                                  textInputAction: TextInputAction.next,
-                                  autofillHints: const [AutofillHints.email],
-                                  decoration: const InputDecoration(
-                                    hintText: 'user@example.com',
-                                    prefixIcon: Icon(
-                                      Icons.email_outlined,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  validator: (v) {
-                                    if (v == null || v.trim().isEmpty) {
-                                      return lang.t('auth.email');
-                                    }
-                                    if (!v.contains('@') || !v.contains('.')) {
-                                      return lang.t('auth.email');
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-
-                                _fieldLabel(lang.t('auth.password'), isDark),
-                                const SizedBox(height: 6),
-                                TextFormField(
-                                  controller: _passwordController,
-                                  obscureText: _obscurePassword,
-                                  textInputAction: TextInputAction.done,
-                                  onFieldSubmitted: (_) {
-                                    if (!auth.loading) _submit();
-                                  },
-                                  decoration: InputDecoration(
-                                    hintText: '••••••••',
-                                    prefixIcon: const Icon(
-                                      Icons.lock_outline_rounded,
-                                      size: 20,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _obscurePassword
-                                            ? Icons.visibility_off_outlined
-                                            : Icons.visibility_outlined,
-                                        size: 20,
                                       ),
-                                      constraints: const BoxConstraints(
-                                        minWidth: 44,
-                                        minHeight: 44,
-                                      ),
-                                      onPressed: () => setState(
-                                        () =>
-                                            _obscurePassword = !_obscurePassword,
-                                      ),
-                                    ),
-                                  ),
-                                  validator: (v) {
-                                    if (v == null || v.length < 6) {
-                                      return '${lang.t('auth.password')} (6+)';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 22),
-
-                                ElevatedButton(
-                                  onPressed: auth.loading ? null : _submit,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: primary,
-                                    foregroundColor: Colors.white,
-                                    minimumSize: const Size(double.infinity, 50),
-                                  ),
-                                  child: auth.loading
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : Text(
-                                          _isLogin
-                                              ? lang.t('auth.login')
-                                              : lang.t('auth.register'),
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                      Text(
+                                        lang.t('nav.appName'),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w500,
+                                          color: isDark
+                                              ? AppColors.darkSecondaryText
+                                              : AppColors.lightSecondaryText,
                                         ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 14),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _languageMenuButton(lang, isDark, accent),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: Icon(
+                                isDark
+                                    ? Icons.light_mode_outlined
+                                    : Icons.dark_mode_outlined,
+                                size: 20,
+                              ),
+                              tooltip: isDark
+                                  ? lang.t('settings.light')
+                                  : lang.t('settings.dark'),
+                              onPressed: () {
+                                HapticFeedback.selectionClick();
+                                theme.toggleTheme();
+                              },
+                              constraints: const BoxConstraints(
+                                minWidth: 44,
+                                minHeight: 44,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
 
-                          TextButton(
-                            onPressed: () => _switchMode(!_isLogin),
-                            child: Text(
-                              _isLogin
-                                  ? '${lang.t('auth.noAccount')} ${lang.t('auth.register')}'
-                                  : '${lang.t('auth.haveAccount')} ${lang.t('auth.login')}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: primary,
+              // Weightless Auth Body
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Center(
+                              child: FloatingDrift(
+                                amplitude: 4.5,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: accent.withValues(alpha: 0.10),
+                                    borderRadius: BorderRadius.circular(22),
+                                    border: Border.all(
+                                      color: accent.withValues(alpha: 0.25),
+                                    ),
+                                  ),
+                                  child: const BrandLogo(
+                                    size: 58,
+                                    borderRadius: 16,
+                                    showShadow: true,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                          TextButton.icon(
-                            onPressed: () {
-                              Navigator.of(context).pushNamed(AppRoutes.welcome);
-                            },
-                            icon: const Icon(Icons.info_outline_rounded, size: 17),
-                            label: Text(
-                              lang.t('auth.welcomeLink'),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: isDark ? Colors.white60 : Colors.black54,
+                            const SizedBox(height: 12),
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 220),
+                              child: Text(
+                                _isLogin
+                                    ? lang.t('auth.login')
+                                    : lang.t('auth.register'),
+                                key: ValueKey<bool>(_isLogin),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.6,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 4),
+                            Text(
+                              lang.t('auth.subtitle'),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                height: 1.35,
+                                color: isDark
+                                    ? AppColors.darkSecondaryText
+                                    : AppColors.lightSecondaryText,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            _AuthModeToggle(
+                              isLogin: _isLogin,
+                              loginLabel: lang.t('auth.login'),
+                              registerLabel: lang.t('auth.register'),
+                              primary: primary,
+                              accent: accent,
+                              isDark: isDark,
+                              onChanged: _switchMode,
+                            ),
+                            const SizedBox(height: 14),
+
+                            AppCard(
+                              enableBlur: true,
+                              padding: const EdgeInsets.all(20),
+                              borderRadius: 26,
+                              glowColor: accent,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (_errorMessage != null)
+                                    _statusBanner(
+                                      message: _errorMessage!,
+                                      color: AppColors.destructive,
+                                      icon: Icons.error_outline_rounded,
+                                    ),
+                                  if (_infoMessage != null)
+                                    _statusBanner(
+                                      message: _infoMessage!,
+                                      color: AppColors.success,
+                                      icon: Icons.mark_email_read_outlined,
+                                    ),
+
+                                  AnimatedSize(
+                                    duration: const Duration(milliseconds: 220),
+                                    curve: Curves.easeOutCubic,
+                                    child: _isLogin
+                                        ? const SizedBox.shrink()
+                                        : Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              _fieldLabel(
+                                                lang.t('auth.name'),
+                                                isDark,
+                                              ),
+                                              const SizedBox(height: 6),
+                                              TextFormField(
+                                                controller: _nameController,
+                                                textInputAction:
+                                                    TextInputAction.next,
+                                                decoration: InputDecoration(
+                                                  hintText: lang.t('auth.name'),
+                                                  prefixIcon: const Icon(
+                                                    Icons.person_outline_rounded,
+                                                    size: 20,
+                                                  ),
+                                                ),
+                                                validator: (v) {
+                                                  if (!_isLogin &&
+                                                      (v == null ||
+                                                          v.trim().isEmpty)) {
+                                                    return lang.t(
+                                                      'auth.nameRequired',
+                                                    );
+                                                  }
+                                                  return null;
+                                                },
+                                              ),
+                                              const SizedBox(height: 14),
+                                            ],
+                                          ),
+                                  ),
+
+                                  _fieldLabel(lang.t('auth.email'), isDark),
+                                  const SizedBox(height: 6),
+                                  TextFormField(
+                                    controller: _emailController,
+                                    keyboardType: TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.next,
+                                    autofillHints: const [AutofillHints.email],
+                                    decoration: const InputDecoration(
+                                      hintText: 'user@example.com',
+                                      prefixIcon: Icon(
+                                        Icons.email_outlined,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    validator: (v) {
+                                      if (v == null ||
+                                          v.trim().isEmpty ||
+                                          !v.contains('@') ||
+                                          !v.contains('.')) {
+                                        return lang.t('auth.emailInvalid');
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 14),
+
+                                  _fieldLabel(lang.t('auth.password'), isDark),
+                                  const SizedBox(height: 6),
+                                  TextFormField(
+                                    controller: _passwordController,
+                                    obscureText: _obscurePassword,
+                                    textInputAction: TextInputAction.done,
+                                    onFieldSubmitted: (_) {
+                                      if (!auth.loading) _submit();
+                                    },
+                                    decoration: InputDecoration(
+                                      hintText: '••••••••',
+                                      prefixIcon: const Icon(
+                                        Icons.lock_outline_rounded,
+                                        size: 20,
+                                      ),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          _obscurePassword
+                                              ? Icons.visibility_off_outlined
+                                              : Icons.visibility_outlined,
+                                          size: 20,
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 44,
+                                          minHeight: 44,
+                                        ),
+                                        onPressed: () => setState(
+                                          () => _obscurePassword =
+                                              !_obscurePassword,
+                                        ),
+                                      ),
+                                    ),
+                                    validator: (v) {
+                                      if (v == null || v.length < 6) {
+                                        return lang.t('auth.passwordShort');
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  ElevatedButton(
+                                    onPressed: auth.loading ? null : _submit,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: primary,
+                                      foregroundColor: Colors.white,
+                                      minimumSize:
+                                          const Size(double.infinity, 52),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(18),
+                                      ),
+                                    ),
+                                    child: auth.loading
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : Text(
+                                            _isLogin
+                                                ? lang.t('auth.login')
+                                                : lang.t('auth.register'),
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+
+                            TextButton(
+                              onPressed: () => _switchMode(!_isLogin),
+                              child: Text(
+                                _isLogin
+                                    ? '${lang.t('auth.noAccount')} ${lang.t('auth.register')}'
+                                    : '${lang.t('auth.haveAccount')} ${lang.t('auth.login')}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: accent,
+                                ),
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: () {
+                                Navigator.of(context)
+                                    .pushNamed(AppRoutes.welcome);
+                              },
+                              icon: const Icon(
+                                Icons.info_outline_rounded,
+                                size: 17,
+                              ),
+                              label: Text(
+                                lang.t('auth.welcomeLink'),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark
+                                      ? AppColors.darkSecondaryText
+                                      : AppColors.lightSecondaryText,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -491,9 +528,9 @@ class _AuthScreenState extends State<AuthScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
@@ -517,7 +554,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget _languageMenuButton(
     LanguageProvider lang,
     bool isDark,
-    Color primary,
+    Color accent,
   ) {
     final codeLabel = lang.currentLocale.toUpperCase();
     return PopupMenuButton<String>(
@@ -527,7 +564,7 @@ class _AuthScreenState extends State<AuthScreen> {
         HapticFeedback.selectionClick();
         lang.setLocale(code);
       },
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       itemBuilder: (_) => const [
         PopupMenuItem(value: 'kk', child: Text('🇰🇿  Қазақша')),
         PopupMenuItem(value: 'ru', child: Text('🇷🇺  Русский')),
@@ -538,20 +575,21 @@ class _AuthScreenState extends State<AuthScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
-            color: primary.withValues(alpha: isDark ? 0.18 : 0.10),
+            color: accent.withValues(alpha: isDark ? 0.16 : 0.10),
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: accent.withValues(alpha: 0.25)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.language_rounded, size: 17, color: primary),
+              Icon(Icons.language_rounded, size: 17, color: accent),
               const SizedBox(width: 5),
               Text(
                 codeLabel,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
-                  color: primary,
+                  color: accent,
                 ),
               ),
             ],
@@ -567,6 +605,7 @@ class _AuthModeToggle extends StatelessWidget {
   final String loginLabel;
   final String registerLabel;
   final Color primary;
+  final Color accent;
   final bool isDark;
   final ValueChanged<bool> onChanged;
 
@@ -575,6 +614,7 @@ class _AuthModeToggle extends StatelessWidget {
     required this.loginLabel,
     required this.registerLabel,
     required this.primary,
+    required this.accent,
     required this.isDark,
     required this.onChanged,
   });
@@ -582,18 +622,18 @@ class _AuthModeToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = isDark
-        ? AppColors.darkCard
-        : Colors.black.withValues(alpha: 0.05);
+        ? Colors.white.withValues(alpha: 0.06)
+        : Colors.white.withValues(alpha: 0.55);
+    final pillColor =
+        isDark ? primary : Colors.white.withValues(alpha: 0.95);
 
     return Container(
       height: 50,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.rimBorder(isDark)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -601,7 +641,7 @@ class _AuthModeToggle extends StatelessWidget {
           return Stack(
             children: [
               AnimatedPositioned(
-                duration: const Duration(milliseconds: 240),
+                duration: const Duration(milliseconds: 260),
                 curve: Curves.easeOutCubic,
                 left: isLogin ? 0 : halfWidth,
                 top: 0,
@@ -609,8 +649,13 @@ class _AuthModeToggle extends StatelessWidget {
                 width: halfWidth,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: primary,
-                    borderRadius: BorderRadius.circular(12),
+                    color: pillColor,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: AppColors.floatingShadows(
+                      isDark: isDark,
+                      glowColor: accent,
+                      elevation: 0.5,
+                    ),
                   ),
                 ),
               ),
@@ -627,8 +672,8 @@ class _AuthModeToggle extends StatelessWidget {
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: isLogin
-                                ? Colors.white
-                                : (isDark ? Colors.white70 : Colors.black54),
+                                ? (isDark ? Colors.white : primary)
+                                : (isDark ? Colors.white60 : Colors.black54),
                           ),
                         ),
                       ),
@@ -645,8 +690,8 @@ class _AuthModeToggle extends StatelessWidget {
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: !isLogin
-                                ? Colors.white
-                                : (isDark ? Colors.white70 : Colors.black54),
+                                ? (isDark ? Colors.white : primary)
+                                : (isDark ? Colors.white60 : Colors.black54),
                           ),
                         ),
                       ),

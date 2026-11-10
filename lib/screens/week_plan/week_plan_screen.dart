@@ -6,6 +6,7 @@ import '../../core/utils/week_utils.dart';
 import '../../providers/task_provider.dart';
 import '../../widgets/add_task_dialog.dart';
 import '../../widgets/common/app_card.dart';
+import '../../widgets/common/glass_surface.dart';
 import '../../widgets/common/mobile_page_container.dart';
 import '../../widgets/common/tap_scale.dart';
 import '../../widgets/day_selector_bar.dart';
@@ -63,21 +64,12 @@ class _WeekPlanScreenState extends State<WeekPlanScreen> {
                       onTap: () => taskProvider.resetToCurrentWeek(),
                       minHeight: 44,
                       borderRadius: BorderRadius.circular(22),
-                      child: Container(
+                      child: GlassSurface(
+                        borderRadius: 22,
+                        elevation: 0.7,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkCard
-                              : AppColors.lightCard,
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(
-                            color: isDark
-                                ? AppColors.darkBorder
-                                : AppColors.lightBorder,
-                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -113,22 +105,23 @@ class _WeekPlanScreenState extends State<WeekPlanScreen> {
               ),
               const SizedBox(height: 12),
 
-              // ── Hero Banner with Responsive View Mode Toggle ──
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCard : AppColors.lightPrimary,
-                  borderRadius: BorderRadius.circular(22),
-                  gradient: isDark
-                      ? null
-                      : const LinearGradient(
-                          colors: [Color(0xFF007AFF), Color(0xFF0A57C7)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                  border: Border.all(
-                    color: isDark ? AppColors.darkBorder : Colors.transparent,
-                  ),
+              // ── Levitating Hero Banner with View Mode Toggle ──
+              GlassSurface(
+                enableBlur: true,
+                borderRadius: 26,
+                glowColor: primary,
+                elevation: 1.25,
+                borderColor: Colors.white.withValues(alpha: isDark ? 0.22 : 0.65),
+                padding: const EdgeInsets.all(20),
+                gradient: LinearGradient(
+                  colors: isDark
+                      ? [const Color(0xCC0D4B45), const Color(0xCC1E1B4B)]
+                      : [
+                          AppColors.lightPrimary.withValues(alpha: 0.92),
+                          const Color(0xE60D9488),
+                        ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

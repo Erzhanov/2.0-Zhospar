@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/i18n/language_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/common/ambient_space_background.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/mobile_page_container.dart';
 import '../../widgets/navigation/top_app_bar.dart';
@@ -17,35 +18,39 @@ class AdminScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (!auth.isAdmin) {
-      return Scaffold(
-        appBar: TopAppBar(
-          title: lang.t('nav.admin'),
-          isSubPage: true,
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.shield_outlined,
-                  size: 52,
-                  color: AppColors.destructive,
-                ),
-                const SizedBox(height: 14),
-                const Text(
-                  'Бұл бетке тек әкімшілер кіре алады',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 18),
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                  label: Text(lang.t('nav.back')),
-                ),
-              ],
+      return AmbientSpaceBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          extendBodyBehindAppBar: true,
+          appBar: TopAppBar(
+            title: lang.t('nav.admin'),
+            isSubPage: true,
+          ),
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.shield_outlined,
+                    size: 52,
+                    color: AppColors.destructive,
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Бұл бетке тек әкімшілер кіре алады',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 18),
+                  ElevatedButton.icon(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                    label: Text(lang.t('nav.back')),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -79,14 +84,15 @@ class AdminScreen extends StatelessWidget {
       ),
     ];
 
-    return Scaffold(
-      appBar: TopAppBar(
-        title: lang.t('nav.admin'),
-        isSubPage: true,
-      ),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
+    return AmbientSpaceBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: TopAppBar(
+          title: lang.t('nav.admin'),
+          isSubPage: true,
+        ),
+        body: SingleChildScrollView(
           child: MobilePageContainer(
             bottomClearance: 36,
             child: Column(

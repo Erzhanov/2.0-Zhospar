@@ -7,6 +7,7 @@ import '../../models/task.dart';
 import '../../models/week.dart';
 import '../../services/task_service.dart';
 import '../../services/week_service.dart';
+import '../../widgets/common/ambient_space_background.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/mobile_page_container.dart';
 import '../../widgets/navigation/top_app_bar.dart';
@@ -97,14 +98,15 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
       return label.contains(q) || quote.contains(q);
     }).toList();
 
-    return Scaffold(
-      appBar: TopAppBar(
-        title: lang.t('archive.title'),
-        isSubPage: true,
-      ),
-      body: SafeArea(
-        top: false,
-        child: _isLoading
+    return AmbientSpaceBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: TopAppBar(
+          title: lang.t('archive.title'),
+          isSubPage: true,
+        ),
+        body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
                 child: MobilePageContainer(
@@ -237,9 +239,13 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            const Divider(height: 1),
                                             Padding(
-                                              padding: const EdgeInsets.all(16),
+                                              padding: const EdgeInsets.fromLTRB(
+                                                16,
+                                                4,
+                                                16,
+                                                16,
+                                              ),
                                               child: Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.stretch,

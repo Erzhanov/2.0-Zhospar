@@ -4,7 +4,9 @@ import '../../core/i18n/language_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/task_provider.dart';
 import '../../services/week_service.dart';
+import '../../widgets/common/ambient_space_background.dart';
 import '../../widgets/common/app_card.dart';
+import '../../widgets/common/glass_surface.dart';
 import '../../widgets/common/mobile_page_container.dart';
 import '../../widgets/navigation/top_app_bar.dart';
 
@@ -115,14 +117,15 @@ class _WeeklyReviewScreenState extends State<WeeklyReviewScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
-    return Scaffold(
-      appBar: TopAppBar(
-        title: lang.t('review.title'),
-        isSubPage: true,
-      ),
-      body: SafeArea(
-        top: false,
-        child: _isLoading
+    return AmbientSpaceBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: TopAppBar(
+          title: lang.t('review.title'),
+          isSubPage: true,
+        ),
+        body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
                 keyboardDismissBehavior:
@@ -132,28 +135,26 @@ class _WeeklyReviewScreenState extends State<WeeklyReviewScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Container(
+                      GlassSurface(
+                        enableBlur: true,
+                        borderRadius: 24,
+                        glowColor: primary,
+                        elevation: 1.25,
+                        borderColor:
+                            Colors.white.withValues(alpha: isDark ? 0.22 : 0.65),
                         padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkCard
-                              : AppColors.lightPrimary,
-                          borderRadius: BorderRadius.circular(22),
-                          gradient: isDark
-                              ? null
-                              : const LinearGradient(
-                                  colors: [
-                                    Color(0xFF007AFF),
-                                    Color(0xFF0051C6),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                          border: Border.all(
-                            color: isDark
-                                ? AppColors.darkBorder
-                                : Colors.transparent,
-                          ),
+                        gradient: LinearGradient(
+                          colors: isDark
+                              ? [
+                                  const Color(0xCC0D4B45),
+                                  const Color(0xCC1E1B4B),
+                                ]
+                              : [
+                                  AppColors.lightPrimary.withValues(alpha: 0.92),
+                                  const Color(0xE60D9488),
+                                ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

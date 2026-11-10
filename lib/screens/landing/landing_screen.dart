@@ -4,7 +4,9 @@ import '../../core/i18n/language_provider.dart';
 import '../../core/routing/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/common/ambient_space_background.dart';
 import '../../widgets/common/app_card.dart';
+import '../../widgets/common/floating_motion.dart';
 import '../../widgets/common/mobile_page_container.dart';
 import '../../widgets/navigation/top_app_bar.dart';
 
@@ -19,45 +21,58 @@ class LandingScreen extends StatelessWidget {
     final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
     final canPop = Navigator.of(context).canPop();
 
-    return Scaffold(
-      appBar: TopAppBar(
-        title: lang.t('nav.about'),
-        isSubPage: canPop,
-        onBack: () => Navigator.of(context).pop(),
-      ),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
+    return AmbientSpaceBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: TopAppBar(
+          title: lang.t('nav.about'),
+          isSubPage: canPop,
+          onBack: () => Navigator.of(context).pop(),
+        ),
+        body: SingleChildScrollView(
           child: MobilePageContainer(
             maxWidth: 540,
-            bottomClearance: 28,
+            bottomClearance: 36,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 12),
                 Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: Image.asset(
-                      'assets/hero-planner.png',
-                      height: 190,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        height: 170,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.lightPrimary.withValues(alpha: 0.85),
-                              AppColors.purple.withValues(alpha: 0.85),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: const Icon(
-                          Icons.auto_awesome,
-                          size: 60,
+                  child: FloatingDrift(
+                    amplitude: 5,
+                    child: AppCard(
+                      enableBlur: true,
+                      padding: const EdgeInsets.all(14),
+                      borderRadius: 26,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Container(
                           color: Colors.white,
+                          padding: const EdgeInsets.all(10),
+                          child: Image.asset(
+                            'assets/hero-planner.png',
+                            height: 175,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                              height: 160,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.lightPrimary.withValues(alpha: 0.85),
+                                    AppColors.teal.withValues(alpha: 0.85),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Icon(
+                                Icons.auto_awesome,
+                                size: 60,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -88,8 +103,10 @@ class LandingScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
-                    color: isDark ? Colors.white60 : Colors.black54,
-                    height: 1.45,
+                    color: isDark
+                        ? AppColors.darkSecondaryText
+                        : AppColors.lightSecondaryText,
+                    height: 1.5,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -113,13 +130,17 @@ class LandingScreen extends StatelessWidget {
                     } else if (canPop) {
                       Navigator.of(context).pop();
                     } else {
-                      Navigator.of(context).pushReplacementNamed(AppRoutes.auth);
+                      Navigator.of(context)
+                          .pushReplacementNamed(AppRoutes.auth);
                     }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primary,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -150,7 +171,7 @@ class LandingScreen extends StatelessWidget {
     return Expanded(
       child: AppCard(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-        borderRadius: 16,
+        borderRadius: 18,
         child: Column(
           children: [
             Text(
@@ -162,7 +183,9 @@ class LandingScreen extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: isDark ? Colors.white54 : Colors.black54,
+                color: isDark
+                    ? AppColors.darkSecondaryText
+                    : AppColors.lightSecondaryText,
                 fontWeight: FontWeight.w500,
               ),
             ),

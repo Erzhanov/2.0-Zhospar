@@ -75,6 +75,9 @@ class AppStrings {
       'auth.registerSuccess': 'Тіркелу сәтті аяқталды!',
       'auth.confirmEmail': 'Email поштаңызды растап, жүйеге кіріңіз',
       'auth.welcomeLink': 'Қосымша мүмкіндіктерін көру',
+      'auth.emailInvalid': 'Дұрыс email поштасын енгізіңіз',
+      'auth.passwordShort': 'Құпиясөз кемінде 6 таңба болуы керек',
+      'auth.nameRequired': 'Аты-жөніңізді енгізіңіз',
       'auth.error': 'Қате орын алды',
 
       // dashboard
@@ -131,6 +134,8 @@ class AppStrings {
       'timer.study': 'Оқу',
       'timer.quick': 'Жылдам',
       'timer.ambientBeats': 'Фокус музыкасы',
+      'timer.start': 'Бастау',
+      'timer.pause': 'Тоқтату',
 
       // review
       'review.title': 'Апталық Қорытынды',
@@ -157,6 +162,10 @@ class AppStrings {
       'assistant.planReady': 'Жоспар табылды!',
       'assistant.addTasks': 'Тапсырмаларды енгізу',
       'assistant.thinking': 'AI жауап дайындауда...',
+      'assistant.welcome': 'Сәлем! Мен сіздің апталық жоспарыңызды құруға және реттеуге көмектесетін AI көмекшіңізбін. Қандай мақсаттарыңыз бар?',
+      'assistant.chipStudy': '📚 Оқу жоспарын құру',
+      'assistant.chipToday': '🗓️ Бүгінгі күн кестесі',
+      'assistant.chipMotivation': '💪 Мотивация берші',
 
       // settings
       'settings.title': 'Баптаулар',
@@ -246,6 +255,9 @@ class AppStrings {
       'auth.registerSuccess': 'Регистрация прошла успешно!',
       'auth.confirmEmail': 'Подтвердите email и затем войдите в аккаунт',
       'auth.welcomeLink': 'Узнать о возможностях ZHOSPAR',
+      'auth.emailInvalid': 'Введите корректный email',
+      'auth.passwordShort': 'Пароль должен содержать минимум 6 символов',
+      'auth.nameRequired': 'Введите ваше имя',
       'auth.error': 'Произошла ошибка',
 
       // dashboard
@@ -302,6 +314,8 @@ class AppStrings {
       'timer.study': 'Учёба',
       'timer.quick': 'Быстрый',
       'timer.ambientBeats': 'Фоновая музыка',
+      'timer.start': 'Старт',
+      'timer.pause': 'Пауза',
 
       // review
       'review.title': 'Итоги недели',
@@ -328,6 +342,10 @@ class AppStrings {
       'assistant.planReady': 'План распознан!',
       'assistant.addTasks': 'Добавить задачи',
       'assistant.thinking': 'AI готовит ответ...',
+      'assistant.welcome': 'Привет! Я ваш AI-помощник для планирования недели. Какие цели или задачи хотите распланировать?',
+      'assistant.chipStudy': '📚 План обучения',
+      'assistant.chipToday': '🗓️ Расписание на сегодня',
+      'assistant.chipMotivation': '💪 Дай мотивацию',
 
       // settings
       'settings.title': 'Настройки',
@@ -417,6 +435,9 @@ class AppStrings {
       'auth.registerSuccess': 'Signed up successfully!',
       'auth.confirmEmail': 'Please verify your email and then sign in',
       'auth.welcomeLink': 'Explore ZHOSPAR features',
+      'auth.emailInvalid': 'Enter a valid email address',
+      'auth.passwordShort': 'Password must be at least 6 characters',
+      'auth.nameRequired': 'Please enter your name',
       'auth.error': 'An error occurred',
 
       // dashboard
@@ -473,6 +494,8 @@ class AppStrings {
       'timer.study': 'Study',
       'timer.quick': 'Quick',
       'timer.ambientBeats': 'Ambient Focus Music',
+      'timer.start': 'Start',
+      'timer.pause': 'Pause',
 
       // review
       'review.title': 'Weekly Review',
@@ -499,6 +522,10 @@ class AppStrings {
       'assistant.planReady': 'Plan found!',
       'assistant.addTasks': 'Add Tasks',
       'assistant.thinking': 'AI is thinking...',
+      'assistant.welcome': 'Hi! I am your AI planning assistant. Tell me your goals or what you want to schedule this week.',
+      'assistant.chipStudy': '📚 Build a study plan',
+      'assistant.chipToday': '🗓️ Plan today',
+      'assistant.chipMotivation': '💪 Give me motivation',
 
       // settings
       'settings.title': 'Settings',

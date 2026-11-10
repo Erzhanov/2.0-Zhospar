@@ -5,6 +5,8 @@ import '../core/i18n/language_provider.dart';
 import '../core/theme/app_colors.dart';
 import '../models/task.dart';
 import '../providers/task_provider.dart';
+import 'common/floating_motion.dart';
+import 'common/glass_surface.dart';
 
 class TaskItemWidget extends StatelessWidget {
   final TaskModel task;
@@ -26,26 +28,31 @@ class TaskItemWidget extends StatelessWidget {
 
     Color priorityBg;
     Color priorityFg;
+    Color priorityGlow;
     String priorityLabel;
 
     switch (task.priority) {
       case 'high':
+        priorityGlow = AppColors.destructive;
         priorityBg = isDark
-            ? AppColors.destructive.withValues(alpha: 0.2)
+            ? AppColors.destructive.withValues(alpha: 0.18)
             : AppColors.priorityHighBg;
-        priorityFg = AppColors.destructive;
+        priorityFg = isDark ? const Color(0xFFFDA4AF) : AppColors.priorityHighText;
         priorityLabel = lang.t('priority.high');
         break;
       case 'low':
+        priorityGlow = isDark ? Colors.white38 : Colors.black26;
         priorityBg = isDark ? Colors.white10 : AppColors.priorityLowBg;
         priorityFg = isDark ? Colors.white70 : AppColors.priorityLowText;
         priorityLabel = lang.t('priority.low');
         break;
       default:
+        priorityGlow = isDark ? AppColors.darkPrimaryBright : AppColors.lightPrimary;
         priorityBg = isDark
-            ? AppColors.darkPrimary.withValues(alpha: 0.2)
+            ? AppColors.darkPrimary.withValues(alpha: 0.18)
             : AppColors.priorityMedBg;
-        priorityFg = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+        priorityFg =
+            isDark ? AppColors.darkPrimaryBright : AppColors.lightPrimary;
         priorityLabel = lang.t('priority.med');
     }
 
@@ -53,108 +60,98 @@ class TaskItemWidget extends StatelessWidget {
         ? AppColors.getCategoryStyle(task.category!, isDark)
         : null;
 
-    final itemWidget = Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: compact ? 8 : 12,
-      ),
-      decoration: BoxDecoration(
-        color: task.isDone
-            ? (isDark
-                ? Colors.white.withValues(alpha: 0.03)
-                : Colors.black.withValues(alpha: 0.025))
-            : (isDark ? AppColors.darkCard : AppColors.lightCard),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-          width: 1,
+    final itemWidget = AnimatedOpacity(
+      opacity: task.isDone ? 0.65 : 1.0,
+      duration: const Duration(milliseconds: 220),
+      child: GlassSurface(
+        margin: const EdgeInsets.only(bottom: 12),
+        borderRadius: 20,
+        elevation: task.isDone ? 0.35 : 0.9,
+        glowColor: task.isDone ? null : priorityGlow,
+        padding: EdgeInsets.symmetric(
+          horizontal: 8,
+          vertical: compact ? 6 : 10,
         ),
-        boxShadow: task.isDone
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // 44x44px hit target around 24x24 visual checkbox
-          Semantics(
-            checked: task.isDone,
-            label: task.title,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                HapticFeedback.lightImpact();
-                taskProvider.toggleTaskStatus(task.id);
-              },
-              child: SizedBox(
-                width: 44,
-                height: 44,
-                child: Center(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOutCubic,
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: task.isDone ? AppColors.success : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: task.isDone
-                            ? AppColors.success
-                            : (isDark ? Colors.white38 : Colors.black26),
-                        width: 2,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 44x44px hit target around buoyant spring checkbox
+            Semantics(
+              checked: task.isDone,
+              label: task.title,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  taskProvider.toggleTaskStatus(task.id);
+                },
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Center(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 240),
+                      curve: AppMotion.spring,
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: task.isDone ? AppColors.success : Colors.transparent,
+                        borderRadius: BorderRadius.circular(9),
+                        border: Border.all(
+                          color: task.isDone
+                              ? AppColors.success
+                              : priorityGlow.withValues(alpha: 0.65),
+                          width: 2,
+                        ),
+                        boxShadow: task.isDone
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.success.withValues(alpha: 0.35),
+                                  blurRadius: 10,
+                                ),
+                              ]
+                            : null,
                       ),
+                      child: task.isDone
+                          ? const Icon(
+                              Icons.check_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            )
+                          : null,
                     ),
-                    child: task.isDone
-                        ? const Icon(
-                            Icons.check_rounded,
-                            size: 16,
-                            color: Colors.white,
-                          )
-                        : null,
                   ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 4),
 
-          // Title & Details
-          Expanded(
-            child: GestureDetector(
-              onTap: onEdit,
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      task.title,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        height: 1.3,
-                        decoration: task.isDone
-                            ? TextDecoration.lineThrough
-                            : TextDecoration.none,
-                        color: task.isDone
-                            ? (isDark ? Colors.white38 : Colors.black38)
-                            : (isDark ? Colors.white : Colors.black87),
+            // Title & Luminous Chips
+            Expanded(
+              child: GestureDetector(
+                onTap: onEdit,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        task.title,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          height: 1.35,
+                          decoration: task.isDone
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                          color: task.isDone
+                              ? (isDark ? Colors.white38 : Colors.black38)
+                              : (isDark
+                                  ? AppColors.darkForeground
+                                  : AppColors.lightForeground),
+                        ),
                       ),
-                    ),
-                    if ((task.description != null &&
-                            task.description!.isNotEmpty) ||
-                        (task.dueTime != null && task.dueTime!.isNotEmpty) ||
-                        (task.category != null && task.category!.isNotEmpty))
                       Padding(
                         padding: const EdgeInsets.only(top: 6),
                         child: Wrap(
@@ -166,14 +163,14 @@ class TaskItemWidget extends StatelessWidget {
                                 task.dueTime!.isNotEmpty)
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 7,
+                                  horizontal: 8,
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
                                   color: isDark
-                                      ? Colors.white10
+                                      ? Colors.white.withValues(alpha: 0.08)
                                       : Colors.black.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -185,13 +182,13 @@ class TaskItemWidget extends StatelessWidget {
                                           ? Colors.white60
                                           : Colors.black54,
                                     ),
-                                    const SizedBox(width: 3),
+                                    const SizedBox(width: 4),
                                     Text(
                                       task.dueTime!,
                                       style: TextStyle(
                                         fontSize: 11,
                                         color: isDark
-                                            ? Colors.white60
+                                            ? Colors.white70
                                             : Colors.black54,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -204,12 +201,12 @@ class TaskItemWidget extends StatelessWidget {
                                 catStyle != null)
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 7,
+                                  horizontal: 8,
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
                                   color: catStyle['bg'] as Color,
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   task.category!,
@@ -222,12 +219,12 @@ class TaskItemWidget extends StatelessWidget {
                               ),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
+                                horizontal: 8,
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
                                 color: priorityBg,
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 priorityLabel,
@@ -241,38 +238,38 @@ class TaskItemWidget extends StatelessWidget {
                           ],
                         ),
                       ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // Touch-friendly Action Buttons (>= 44x44px)
-          if (onEdit != null)
+            if (onEdit != null)
+              IconButton(
+                icon: Icon(
+                  Icons.edit_outlined,
+                  size: 19,
+                  color: isDark ? Colors.white54 : Colors.black45,
+                ),
+                tooltip: lang.t('common.edit'),
+                onPressed: onEdit,
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              ),
             IconButton(
               icon: Icon(
-                Icons.edit_outlined,
+                Icons.delete_outline_rounded,
                 size: 19,
                 color: isDark ? Colors.white54 : Colors.black45,
               ),
-              tooltip: lang.t('common.edit'),
-              onPressed: onEdit,
+              tooltip: lang.t('common.delete'),
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                taskProvider.deleteTask(task.id);
+              },
               constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             ),
-          IconButton(
-            icon: Icon(
-              Icons.delete_outline_rounded,
-              size: 19,
-              color: isDark ? Colors.white54 : Colors.black45,
-            ),
-            tooltip: lang.t('common.delete'),
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              taskProvider.deleteTask(task.id);
-            },
-            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-          ),
-        ],
+          ],
+        ),
       ),
     );
 
@@ -280,21 +277,21 @@ class TaskItemWidget extends StatelessWidget {
       key: Key(task.id),
       direction: DismissDirection.horizontal,
       background: Container(
-        margin: const EdgeInsets.only(bottom: 10),
+        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
-          color: AppColors.success,
-          borderRadius: BorderRadius.circular(18),
+          color: AppColors.success.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(20),
         ),
         alignment: Alignment.centerLeft,
         child: const Icon(Icons.check_rounded, color: Colors.white, size: 24),
       ),
       secondaryBackground: Container(
-        margin: const EdgeInsets.only(bottom: 10),
+        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
-          color: AppColors.destructive,
-          borderRadius: BorderRadius.circular(18),
+          color: AppColors.destructive.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(20),
         ),
         alignment: Alignment.centerRight,
         child: const Icon(

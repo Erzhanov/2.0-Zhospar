@@ -9,6 +9,8 @@ import '../../screens/landing/landing_screen.dart';
 import '../../screens/settings/settings_screen.dart';
 import '../../screens/timer/timer_screen.dart';
 import '../../screens/weekly_review/weekly_review_screen.dart';
+import '../../widgets/common/ambient_space_background.dart';
+import '../../widgets/common/floating_motion.dart';
 import 'app_routes.dart';
 
 /// Centralized route generator with auth guarding and smooth transitions.
@@ -96,14 +98,14 @@ class AppRouter {
       transitionsBuilder: (_, anim, _, child) {
         final curved = CurvedAnimation(
           parent: anim,
-          curve: Curves.easeOutCubic,
+          curve: AppMotion.spring,
           reverseCurve: Curves.easeInCubic,
         );
         return FadeTransition(
-          opacity: curved,
+          opacity: CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
           child: SlideTransition(
             position: Tween<Offset>(
-              begin: const Offset(0.06, 0),
+              begin: const Offset(0.05, 0),
               end: Offset.zero,
             ).animate(curved),
             child: child,
@@ -123,8 +125,11 @@ class _ProtectedRoute extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     if (auth.initializing) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+      return const AmbientSpaceBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+        ),
       );
     }
     if (!auth.isAuthenticated) {

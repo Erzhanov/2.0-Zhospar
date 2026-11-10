@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/i18n/language_provider.dart';
 import '../core/theme/app_colors.dart';
+import 'common/floating_motion.dart';
+import 'common/glass_surface.dart';
 
 /// Shared mobile-first Add/Edit task dialog content so both flows reuse the
 /// exact same validation, touch targets, and responsive layout.
@@ -113,13 +115,16 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-      backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 440),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Form(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      child: SpringPopIn(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: GlassSurface(
+            enableBlur: true,
+            borderRadius: 26,
+            padding: const EdgeInsets.all(20),
+            child: Form(
             key: _formKey,
             child: SingleChildScrollView(
               child: Column(
@@ -239,6 +244,7 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

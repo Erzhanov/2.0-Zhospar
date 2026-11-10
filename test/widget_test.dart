@@ -26,7 +26,9 @@ import 'package:zhospar_app/screens/timer/timer_screen.dart';
 import 'package:zhospar_app/services/auth_service.dart';
 import 'package:zhospar_app/services/task_service.dart';
 import 'package:zhospar_app/services/week_service.dart';
+import 'package:zhospar_app/widgets/common/floating_motion.dart';
 import 'package:zhospar_app/widgets/navigation/animated_bottom_nav_bar.dart';
+import 'package:zhospar_app/widgets/navigation/mobile_more_sheet.dart';
 import 'package:zhospar_app/widgets/task_item_widget.dart';
 
 class _FakeAuthService implements AuthService {
@@ -238,13 +240,16 @@ Widget _buildTestApp({
       ),
       ChangeNotifierProvider(create: (_) => MusicProvider()),
     ],
-    child: MediaQuery(
-      data: MediaQueryData(size: viewport),
-      child: MaterialApp(
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
-        initialRoute: initialRoute,
-        onGenerateRoute: AppRouter.onGenerateRoute,
+    child: Builder(
+      builder: (context) => MediaQuery(
+        data: MediaQueryData(size: viewport),
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          themeMode: Provider.of<ThemeProvider>(context).themeMode,
+          initialRoute: initialRoute,
+          onGenerateRoute: AppRouter.onGenerateRoute,
+        ),
       ),
     ),
   );
@@ -253,6 +258,7 @@ Widget _buildTestApp({
 void main() {
   setUpAll(() {
     GoogleFonts.config.allowRuntimeFetching = false;
+    AppMotion.enableContinuousDrift = false;
   });
 
   setUp(() {
@@ -280,7 +286,9 @@ void main() {
       final fields = find.byType(TextFormField);
       await tester.enterText(fields.at(0), 'ayan@example.com');
       await tester.enterText(fields.at(1), 'secret123');
-      await tester.tap(find.byType(ElevatedButton).first);
+      final loginSubmit = find.byType(ElevatedButton).first;
+      await tester.ensureVisible(loginSubmit);
+      await tester.tap(loginSubmit);
       await tester.pumpAndSettle();
 
       // Redirected to main AppShell / DashboardScreen
@@ -364,7 +372,12 @@ void main() {
       // Open More sheet -> navigate to TimerScreen
       await tester.tap(find.byIcon(Icons.grid_view_rounded));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.timer_outlined));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(MobileMoreSheet),
+          matching: find.byIcon(Icons.timer_outlined),
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(TimerScreen), findsOneWidget);
@@ -556,6 +569,51 @@ void main() {
       await tester.tap(find.byIcon(Icons.arrow_back_rounded));
       await tester.pumpAndSettle();
       expect(find.byType(AppShell), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Dark mode Deep Space Anti-Gravity glass surfaces and More sheet render cleanly',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final user = User(
+        id: 'user-123',
+        appMetadata: const {},
+        userMetadata: const {'display_name': 'Ayan'},
+        aud: 'authenticated',
+        createdAt: '2026-01-01T00:00:00Z',
+        email: 'ayan@example.com',
+      );
+      final session = Session(
+        accessToken: 'token-abc',
+        tokenType: 'bearer',
+        user: user,
+      );
+      final authedProvider = AuthProvider(
+        authService: _FakeAuthService(initialSession: session),
+      );
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          authProvider: authedProvider,
+          viewport: const Size(390, 844),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Switch to Dark mode via TopAppBar theme button
+      await tester.tap(find.byIcon(Icons.dark_mode_outlined).first);
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.light_mode_outlined), findsWidgets);
+
+      // Open frosted glass More sheet
+      await tester.tap(find.byIcon(Icons.grid_view_rounded));
+      await tester.pumpAndSettle();
+      expect(find.byType(MobileMoreSheet), findsOneWidget);
     },
   );
 }

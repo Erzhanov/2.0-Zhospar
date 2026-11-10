@@ -5,6 +5,7 @@ import '../../core/routing/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../widgets/common/ambient_space_background.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/mobile_page_container.dart';
 import '../../widgets/common/tap_scale.dart';
@@ -25,14 +26,15 @@ class SettingsScreen extends StatelessWidget {
     final userEmail = auth.user?.email ?? 'user@example.com';
     final initial = userEmail.isNotEmpty ? userEmail[0].toUpperCase() : 'U';
 
-    return Scaffold(
-      appBar: TopAppBar(
-        title: lang.t('settings.title'),
-        isSubPage: true,
-      ),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
+    return AmbientSpaceBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: TopAppBar(
+          title: lang.t('settings.title'),
+          isSubPage: true,
+        ),
+        body: SingleChildScrollView(
           child: MobilePageContainer(
             bottomClearance: 36,
             child: Column(

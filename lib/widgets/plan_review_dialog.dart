@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../core/i18n/language_provider.dart';
 import '../core/theme/app_colors.dart';
 import '../providers/task_provider.dart';
+import 'common/floating_motion.dart';
+import 'common/glass_surface.dart';
 
 class PlanReviewDialog extends StatefulWidget {
   final List<Map<String, dynamic>> initialTasks;
@@ -33,13 +35,16 @@ class _PlanReviewDialogState extends State<PlanReviewDialog> {
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-      backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      child: SpringPopIn(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+          child: GlassSurface(
+            enableBlur: true,
+            borderRadius: 26,
+            padding: const EdgeInsets.all(20),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
@@ -240,6 +245,7 @@ class _PlanReviewDialogState extends State<PlanReviewDialog> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

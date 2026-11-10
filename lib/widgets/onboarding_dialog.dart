@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/i18n/language_provider.dart';
 import '../core/theme/app_colors.dart';
+import 'common/floating_motion.dart';
+import 'common/glass_surface.dart';
 
 class OnboardingDialog extends StatefulWidget {
   const OnboardingDialog({super.key});
@@ -44,13 +46,16 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: Padding(
-          padding: const EdgeInsets.all(22),
-          child: Column(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      child: SpringPopIn(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: GlassSurface(
+            enableBlur: true,
+            borderRadius: 28,
+            padding: const EdgeInsets.all(22),
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Align(
@@ -163,6 +168,7 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
