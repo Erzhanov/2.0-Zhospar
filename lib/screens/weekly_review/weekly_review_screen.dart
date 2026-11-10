@@ -4,6 +4,9 @@ import '../../core/i18n/language_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/task_provider.dart';
 import '../../services/week_service.dart';
+import '../../widgets/common/app_card.dart';
+import '../../widgets/common/mobile_page_container.dart';
+import '../../widgets/navigation/top_app_bar.dart';
 
 class WeeklyReviewScreen extends StatefulWidget {
   const WeeklyReviewScreen({super.key});
@@ -45,19 +48,29 @@ class _WeeklyReviewScreenState extends State<WeeklyReviewScreen> {
 
   Future<void> _loadReview() async {
     final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-    if (taskProvider.currentWeek != null) {
-      final review = await _weekService.getWeeklyReview(taskProvider.currentWeek!.id);
-      if (review != null) {
-        _learnedController.text = review.learnedText;
-        _goodController.text = review.goodText;
-        _hardController.text = review.hardText;
-        _changeController.text = review.changeText;
-        if (review.nextGoals.isNotEmpty) _goal1Controller.text = review.nextGoals[0];
-        if (review.nextGoals.length > 1) _goal2Controller.text = review.nextGoals[1];
-        if (review.nextGoals.length > 2) _goal3Controller.text = review.nextGoals[2];
+    try {
+      if (taskProvider.currentWeek != null) {
+        final review =
+            await _weekService.getWeeklyReview(taskProvider.currentWeek!.id);
+        if (review != null && mounted) {
+          _learnedController.text = review.learnedText;
+          _goodController.text = review.goodText;
+          _hardController.text = review.hardText;
+          _changeController.text = review.changeText;
+          if (review.nextGoals.isNotEmpty) {
+            _goal1Controller.text = review.nextGoals[0];
+          }
+          if (review.nextGoals.length > 1) {
+            _goal2Controller.text = review.nextGoals[1];
+          }
+          if (review.nextGoals.length > 2) {
+            _goal3Controller.text = review.nextGoals[2];
+          }
+        }
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-    setState(() => _isLoading = false);
   }
 
   Future<void> _save() async {
@@ -100,143 +113,154 @@ class _WeeklyReviewScreenState extends State<WeeklyReviewScreen> {
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
     return Scaffold(
+      appBar: TopAppBar(
+        title: lang.t('review.title'),
+        isSubPage: true,
+      ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Hero
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCard : AppColors.lightPrimary,
-                  borderRadius: BorderRadius.circular(22),
-                  gradient: isDark
-                      ? null
-                      : const LinearGradient(
-                          colors: [Color(0xFF007AFF), Color(0xFF0051C6)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+        top: false,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                child: MobilePageContainer(
+                  bottomClearance: 36,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkCard
+                              : AppColors.lightPrimary,
+                          borderRadius: BorderRadius.circular(22),
+                          gradient: isDark
+                              ? null
+                              : const LinearGradient(
+                                  colors: [
+                                    Color(0xFF007AFF),
+                                    Color(0xFF0051C6),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : Colors.transparent,
+                          ),
                         ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      lang.t('review.title'),
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              lang.t('review.title'),
+                              style: const TextStyle(
+                                fontSize: 21,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              lang.t('review.desc'),
+                              style: const TextStyle(
+                                fontSize: 13.5,
+                                color: Colors.white70,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      lang.t('review.desc'),
-                      style: const TextStyle(fontSize: 13, color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // 4 Questions
-              _questionCard(
-                lang.t('review.q1'),
-                'Жаңа дағды, білім, тәжірибе...',
-                _learnedController,
-                Icons.school_outlined,
-                isDark,
-              ),
-              const SizedBox(height: 12),
-              _questionCard(
-                lang.t('review.q2'),
-                'Жетістіктер, орындалған ірі мақсаттар...',
-                _goodController,
-                Icons.thumb_up_alt_outlined,
-                isDark,
-              ),
-              const SizedBox(height: 12),
-              _questionCard(
-                lang.t('review.q3'),
-                'Кедергілер, уақыт жетпеген сәттер...',
-                _hardController,
-                Icons.warning_amber_rounded,
-                isDark,
-              ),
-              const SizedBox(height: 12),
-              _questionCard(
-                lang.t('review.q4'),
-                'Келесі аптада түзейтін әдеттер...',
-                _changeController,
-                Icons.sync_rounded,
-                isDark,
-              ),
-              const SizedBox(height: 20),
-
-              // 3 Next Goals
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      const SizedBox(height: 18),
+                      _questionCard(
+                        lang.t('review.q1'),
+                        'Жаңа дағды, білім, тәжірибе...',
+                        _learnedController,
+                        Icons.school_outlined,
+                        primary,
+                      ),
+                      const SizedBox(height: 12),
+                      _questionCard(
+                        lang.t('review.q2'),
+                        'Жетістіктер, орындалған ірі мақсаттар...',
+                        _goodController,
+                        Icons.thumb_up_alt_outlined,
+                        primary,
+                      ),
+                      const SizedBox(height: 12),
+                      _questionCard(
+                        lang.t('review.q3'),
+                        'Кедергілер, уақыт жетпеген сәттер...',
+                        _hardController,
+                        Icons.warning_amber_rounded,
+                        primary,
+                      ),
+                      const SizedBox(height: 12),
+                      _questionCard(
+                        lang.t('review.q4'),
+                        'Келесі аптада түзейтін әдеттер...',
+                        _changeController,
+                        Icons.sync_rounded,
+                        primary,
+                      ),
+                      const SizedBox(height: 18),
+                      AppCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              lang.t('review.goals'),
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _goalField('1', _goal1Controller, isDark, lang),
+                            const SizedBox(height: 10),
+                            _goalField('2', _goal2Controller, isDark, lang),
+                            const SizedBox(height: 10),
+                            _goalField('3', _goal3Controller, isDark, lang),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                      ElevatedButton.icon(
+                        onPressed: _isSaving ? null : _save,
+                        icon: _isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.save_rounded, size: 19),
+                        label: Text(
+                          lang.t('common.save'),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primary,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      lang.t('review.goals'),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    _goalField('1', _goal1Controller, isDark),
-                    const SizedBox(height: 8),
-                    _goalField('2', _goal2Controller, isDark),
-                    const SizedBox(height: 8),
-                    _goalField('3', _goal3Controller, isDark),
-                  ],
-                ),
               ),
-              const SizedBox(height: 24),
-
-              // Save Button
-              ElevatedButton.icon(
-                onPressed: _isSaving ? null : _save,
-                icon: _isSaving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.save_rounded, size: 18),
-                label: Text(
-                  lang.t('common.save'),
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  elevation: 0,
-                ),
-              ),
-              const SizedBox(height: 60),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -246,28 +270,23 @@ class _WeeklyReviewScreenState extends State<WeeklyReviewScreen> {
     String hint,
     TextEditingController controller,
     IconData icon,
-    bool isDark,
+    Color primary,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-        ),
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 18, color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary),
+              Icon(icon, size: 19, color: primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -276,57 +295,43 @@ class _WeeklyReviewScreenState extends State<WeeklyReviewScreen> {
           TextField(
             controller: controller,
             maxLines: 2,
-            style: const TextStyle(fontSize: 13),
-            decoration: InputDecoration(
-              hintText: hint,
-              filled: true,
-              fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                ),
-              ),
-              contentPadding: const EdgeInsets.all(12),
-            ),
+            style: const TextStyle(fontSize: 13.5),
+            decoration: InputDecoration(hintText: hint),
           ),
         ],
       ),
     );
   }
 
-  Widget _goalField(String num, TextEditingController controller, bool isDark) {
+  Widget _goalField(
+    String num,
+    TextEditingController controller,
+    bool isDark,
+    LanguageProvider lang,
+  ) {
     return Row(
       children: [
         Container(
-          width: 24,
-          height: 24,
+          width: 28,
+          height: 28,
           decoration: BoxDecoration(
-            color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06),
+            color:
+                isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06),
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
           child: Text(
             num,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
         Expanded(
           child: TextField(
             controller: controller,
-            style: const TextStyle(fontSize: 13),
+            style: const TextStyle(fontSize: 13.5),
             decoration: InputDecoration(
-              hintText: 'Мақсат жазыңыз...',
-              filled: true,
-              fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                ),
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              hintText: '${lang.t('review.goal')} $num',
             ),
           ),
         ),

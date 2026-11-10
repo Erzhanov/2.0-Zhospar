@@ -6,8 +6,8 @@ import '../services/week_service.dart';
 import '../core/utils/week_utils.dart';
 
 class TaskProvider extends ChangeNotifier {
-  final TaskService _taskService = TaskService();
-  final WeekService _weekService = WeekService();
+  final TaskService _taskService;
+  final WeekService _weekService;
 
   String _weekStartDate = WeekUtils.getWeekStartDate();
   WeekModel? _currentWeek;
@@ -16,6 +16,7 @@ class TaskProvider extends ChangeNotifier {
   String _reflectionText = '';
   bool _isLoading = false;
   int _streakCount = 0;
+  String? _activeUserId;
 
   String get weekStartDate => _weekStartDate;
   WeekModel? get currentWeek => _currentWeek;
@@ -25,7 +26,6 @@ class TaskProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   int get streakCount => _streakCount;
 
-  // Filtered tasks for the selected day
   List<TaskModel> get selectedDayTasks =>
       _tasks.where((t) => t.dayOfWeek == _selectedDay).toList();
 
@@ -34,7 +34,27 @@ class TaskProvider extends ChangeNotifier {
   int get completionPct =>
       totalCount > 0 ? ((doneCount / totalCount) * 100).round() : 0;
 
-  TaskProvider() {
+  TaskProvider({
+    TaskService? taskService,
+    WeekService? weekService,
+  })  : _taskService = taskService ?? TaskService(),
+        _weekService = weekService ?? WeekService();
+
+  /// Keeps week & task cache synchronized with the authenticated user session.
+  void syncAuthUser(String? userId) {
+    if (userId == _activeUserId) return;
+    _activeUserId = userId;
+
+    if (userId == null) {
+      _currentWeek = null;
+      _tasks = [];
+      _reflectionText = '';
+      _streakCount = 0;
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
     loadWeek(_weekStartDate);
   }
 
@@ -73,7 +93,7 @@ class TaskProvider extends ChangeNotifier {
         _reflectionText = '';
       }
     } catch (_) {
-      // Handle or log error
+      // Preserve current state cleanly on transient errors
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -143,14 +163,12 @@ class TaskProvider extends ChangeNotifier {
     final currentStatus = _tasks[idx].status;
     final newStatus = currentStatus == 'done' ? 'todo' : 'done';
 
-    // Optimistic update
     _tasks[idx] = _tasks[idx].copyWith(status: newStatus);
     notifyListeners();
 
     try {
       await _taskService.updateTask(taskId, {'status': newStatus});
     } catch (_) {
-      // Revert if error
       _tasks[idx] = _tasks[idx].copyWith(status: currentStatus);
       notifyListeners();
     }
@@ -186,7 +204,6 @@ class TaskProvider extends ChangeNotifier {
     final idx = _tasks.indexWhere((t) => t.id == id);
     if (idx != -1) {
       await _taskService.updateTask(id, updates);
-      // Reload tasks
       if (_currentWeek != null) {
         _tasks = await _taskService.getTasksForWeek(_currentWeek!.id);
         notifyListeners();

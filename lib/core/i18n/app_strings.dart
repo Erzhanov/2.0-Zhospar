@@ -15,6 +15,8 @@ class AppStrings {
       'nav.menu': 'Мәзір',
       'nav.close': 'Жабу',
       'nav.logout': 'Шығу',
+      'nav.back': 'Артқа',
+      'nav.about': 'Қосымша туралы',
       'nav.appName': 'Апталық Жоспар',
 
       // common
@@ -71,9 +73,18 @@ class AppStrings {
       'auth.haveAccount': 'Аккаунтыңыз бар ма?',
       'auth.loginSuccess': 'Қош келдіңіз!',
       'auth.registerSuccess': 'Тіркелу сәтті аяқталды!',
+      'auth.confirmEmail': 'Email поштаңызды растап, жүйеге кіріңіз',
+      'auth.welcomeLink': 'Қосымша мүмкіндіктерін көру',
       'auth.error': 'Қате орын алды',
 
       // dashboard
+      'dashboard.hello': 'Сәлем',
+      'dashboard.total': 'Жалпы',
+      'dashboard.done': 'Орындалды',
+      'dashboard.left': 'Қалды',
+      'dashboard.filterTodo': 'Қалған',
+      'dashboard.filterDone': 'Дайын',
+      'dashboard.reflectionSaved': 'Рефлексия сақталды!',
       'dashboard.quote': 'Апталық ұран / мотивация',
       'dashboard.quoteHint': 'Осы аптадағы басты ұраныңызды жазыңыз...',
       'dashboard.reflection': 'Бүгінгі рефлексия',
@@ -84,6 +95,9 @@ class AppStrings {
       // week plan
       'week.title': 'Апталық Жоспар',
       'week.dayEmpty': 'Бұл күнге тапсырма қойылмаған',
+      'week.byDay': 'Күн',
+      'week.allWeek': 'Апта',
+      'week.noTasks': 'Тапсырма жоқ',
 
       // dialogs
       'dlg.addTask': 'Жаңа тапсырма',
@@ -103,6 +117,9 @@ class AppStrings {
       'analytics.done': 'Орындалғаны',
       'analytics.left': 'Қалғаны',
       'analytics.streak': 'Стрик',
+      'analytics.weeklyTrend': 'Апталық динамика',
+      'analytics.byCategory': 'Категориялар бойынша',
+      'analytics.other': 'Басқа',
 
       // timer
       'timer.title': 'Фокус Таймері',
@@ -139,6 +156,7 @@ class AppStrings {
       'assistant.extractPlan': 'Жоспарды күнтізбеге қосу',
       'assistant.planReady': 'Жоспар табылды!',
       'assistant.addTasks': 'Тапсырмаларды енгізу',
+      'assistant.thinking': 'AI жауап дайындауда...',
 
       // settings
       'settings.title': 'Баптаулар',
@@ -147,6 +165,9 @@ class AppStrings {
       'settings.dark': 'Қараңғы (Dark)',
       'settings.language': 'Тіл / Язык / Language',
       'settings.onboarding': 'Нұсқаулықты қайта көрсету',
+      'settings.onboardingDesc': 'Қолданбаны пайдалану бойынша қадамдық кеңестерді қайта көру.',
+      'settings.roleAdmin': 'Әкімші (Admin)',
+      'settings.roleUser': 'Қолданушы (User)',
       'settings.about': 'Қосымша туралы',
       'settings.version': 'Нұсқа: 2.0.0 (Flutter)',
     },
@@ -165,6 +186,8 @@ class AppStrings {
       'nav.menu': 'Меню',
       'nav.close': 'Закрыть',
       'nav.logout': 'Выйти',
+      'nav.back': 'Назад',
+      'nav.about': 'О приложении',
       'nav.appName': 'Недельный План',
 
       // common
@@ -221,9 +244,18 @@ class AppStrings {
       'auth.haveAccount': 'Уже есть аккаунт?',
       'auth.loginSuccess': 'Добро пожаловать!',
       'auth.registerSuccess': 'Регистрация прошла успешно!',
+      'auth.confirmEmail': 'Подтвердите email и затем войдите в аккаунт',
+      'auth.welcomeLink': 'Узнать о возможностях ZHOSPAR',
       'auth.error': 'Произошла ошибка',
 
       // dashboard
+      'dashboard.hello': 'Привет',
+      'dashboard.total': 'Всего',
+      'dashboard.done': 'Выполнено',
+      'dashboard.left': 'Осталось',
+      'dashboard.filterTodo': 'В работе',
+      'dashboard.filterDone': 'Готово',
+      'dashboard.reflectionSaved': 'Рефлексия сохранена!',
       'dashboard.quote': 'Цитата недели / Мотивация',
       'dashboard.quoteHint': 'Напишите главный девиз этой недели...',
       'dashboard.reflection': 'Рефлексия за сегодня',
@@ -234,6 +266,9 @@ class AppStrings {
       // week plan
       'week.title': 'Недельный План',
       'week.dayEmpty': 'На этот день задач нет',
+      'week.byDay': 'День',
+      'week.allWeek': 'Неделя',
+      'week.noTasks': 'Нет задач',
 
       // dialogs
       'dlg.addTask': 'Новая задача',
@@ -253,6 +288,9 @@ class AppStrings {
       'analytics.done': 'Выполнено',
       'analytics.left': 'Осталось',
       'analytics.streak': 'Серия',
+      'analytics.weeklyTrend': 'Недельная динамика',
+      'analytics.byCategory': 'По категориям',
+      'analytics.other': 'Другое',
 
       // timer
       'timer.title': 'Фокус Таймер',
@@ -289,6 +327,7 @@ class AppStrings {
       'assistant.extractPlan': 'Импортировать в план',
       'assistant.planReady': 'План распознан!',
       'assistant.addTasks': 'Добавить задачи',
+      'assistant.thinking': 'AI готовит ответ...',
 
       // settings
       'settings.title': 'Настройки',
@@ -297,6 +336,9 @@ class AppStrings {
       'settings.dark': 'Тёмная',
       'settings.language': 'Язык / Тіл / Language',
       'settings.onboarding': 'Показать обучение заново',
+      'settings.onboardingDesc': 'Повторно просмотреть пошаговые подсказки по приложению.',
+      'settings.roleAdmin': 'Администратор',
+      'settings.roleUser': 'Пользователь',
       'settings.about': 'О приложении',
       'settings.version': 'Версия: 2.0.0 (Flutter)',
     },
@@ -315,6 +357,8 @@ class AppStrings {
       'nav.menu': 'Menu',
       'nav.close': 'Close',
       'nav.logout': 'Sign Out',
+      'nav.back': 'Back',
+      'nav.about': 'About App',
       'nav.appName': 'Weekly Planner',
 
       // common
@@ -371,9 +415,18 @@ class AppStrings {
       'auth.haveAccount': 'Already have an account?',
       'auth.loginSuccess': 'Welcome back!',
       'auth.registerSuccess': 'Signed up successfully!',
+      'auth.confirmEmail': 'Please verify your email and then sign in',
+      'auth.welcomeLink': 'Explore ZHOSPAR features',
       'auth.error': 'An error occurred',
 
       // dashboard
+      'dashboard.hello': 'Hello',
+      'dashboard.total': 'Total',
+      'dashboard.done': 'Done',
+      'dashboard.left': 'Left',
+      'dashboard.filterTodo': 'To Do',
+      'dashboard.filterDone': 'Done',
+      'dashboard.reflectionSaved': 'Reflection saved!',
       'dashboard.quote': 'Weekly Motto / Motivation',
       'dashboard.quoteHint': "Enter this week's main motivation...",
       'dashboard.reflection': "Today's Reflection",
@@ -384,6 +437,9 @@ class AppStrings {
       // week plan
       'week.title': 'Weekly Plan',
       'week.dayEmpty': 'No tasks for this day',
+      'week.byDay': 'Day',
+      'week.allWeek': 'Week',
+      'week.noTasks': 'No tasks',
 
       // dialogs
       'dlg.addTask': 'New Task',
@@ -403,6 +459,9 @@ class AppStrings {
       'analytics.done': 'Completed',
       'analytics.left': 'Remaining',
       'analytics.streak': 'Streak',
+      'analytics.weeklyTrend': 'Weekly Trend',
+      'analytics.byCategory': 'By Category',
+      'analytics.other': 'Other',
 
       // timer
       'timer.title': 'Focus Timer',
@@ -439,6 +498,7 @@ class AppStrings {
       'assistant.extractPlan': 'Import to calendar',
       'assistant.planReady': 'Plan found!',
       'assistant.addTasks': 'Add Tasks',
+      'assistant.thinking': 'AI is thinking...',
 
       // settings
       'settings.title': 'Settings',
@@ -447,6 +507,9 @@ class AppStrings {
       'settings.dark': 'Dark',
       'settings.language': 'Language / Тіл / Язык',
       'settings.onboarding': 'Restart Onboarding',
+      'settings.onboardingDesc': 'Review the step-by-step guide on how to use the app.',
+      'settings.roleAdmin': 'Administrator',
+      'settings.roleUser': 'User',
       'settings.about': 'About App',
       'settings.version': 'Version: 2.0.0 (Flutter)',
     },

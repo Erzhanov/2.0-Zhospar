@@ -4,9 +4,13 @@ import '../../core/i18n/language_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/week_utils.dart';
 import '../../providers/task_provider.dart';
-import '../../widgets/task_item_widget.dart';
 import '../../widgets/add_task_dialog.dart';
+import '../../widgets/common/app_card.dart';
+import '../../widgets/common/mobile_page_container.dart';
+import '../../widgets/common/tap_scale.dart';
+import '../../widgets/day_selector_bar.dart';
 import '../../widgets/edit_task_dialog.dart';
+import '../../widgets/task_item_widget.dart';
 
 class WeekPlanScreen extends StatefulWidget {
   const WeekPlanScreen({super.key});
@@ -16,72 +20,100 @@ class WeekPlanScreen extends StatefulWidget {
 }
 
 class _WeekPlanScreenState extends State<WeekPlanScreen> {
-  bool _isAllDaysView = false; // false = by day, true = all 7 days
+  bool _isAllDaysView = false;
 
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
     final taskProvider = Provider.of<TaskProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
     final weekRange = WeekUtils.formatWeekRange(
       taskProvider.weekStartDate,
       lang.currentLocale,
     );
-
-    final dayShort = lang.getDayShort();
     final dayNames = lang.getDayNames();
     final selectedDayTasks = taskProvider.selectedDayTasks;
 
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    return RefreshIndicator(
+      onRefresh: () => taskProvider.loadWeek(taskProvider.weekStartDate),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: MobilePageContainer(
+          bottomClearance: 100,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Top Week Switcher ──
+              // ── Top Week Switcher (>= 44x44px) ──
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left_rounded),
+                    icon: const Icon(Icons.chevron_left_rounded, size: 26),
                     onPressed: () => taskProvider.shiftCurrentWeek(-1),
                     tooltip: lang.t('common.prevWeek'),
+                    constraints: const BoxConstraints(
+                      minWidth: 44,
+                      minHeight: 44,
+                    ),
                   ),
-                  GestureDetector(
-                    onTap: () => taskProvider.resetToCurrentWeek(),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  Flexible(
+                    child: TapScale(
+                      onTap: () => taskProvider.resetToCurrentWeek(),
+                      minHeight: 44,
+                      borderRadius: BorderRadius.circular(22),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.calendar_today_rounded, size: 14),
-                          const SizedBox(width: 6),
-                          Text(
-                            weekRange,
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkCard
+                              : AppColors.lightCard,
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder,
                           ),
-                        ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.calendar_today_rounded, size: 15),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                weekRange,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.chevron_right_rounded),
+                    icon: const Icon(Icons.chevron_right_rounded, size: 26),
                     onPressed: () => taskProvider.shiftCurrentWeek(1),
                     tooltip: lang.t('common.nextWeek'),
+                    constraints: const BoxConstraints(
+                      minWidth: 44,
+                      minHeight: 44,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
 
-              // ── Hero Banner with View Mode Toggle ──
+              // ── Hero Banner with Responsive View Mode Toggle ──
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -94,12 +126,18 @@ class _WeekPlanScreenState extends State<WeekPlanScreen> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkBorder : Colors.transparent,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 10,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      alignment: WrapAlignment.spaceBetween,
                       children: [
                         Text(
                           lang.t('week.title'),
@@ -109,33 +147,35 @@ class _WeekPlanScreenState extends State<WeekPlanScreen> {
                             color: Colors.white,
                           ),
                         ),
-                        // View Toggle Button (By Day vs All Days)
                         Container(
-                          padding: const EdgeInsets.all(2),
+                          padding: const EdgeInsets.all(3),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                           child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               _viewToggleButton(
                                 icon: Icons.view_day_outlined,
-                                label: 'Күн',
+                                label: lang.t('week.byDay'),
                                 active: !_isAllDaysView,
-                                onTap: () => setState(() => _isAllDaysView = false),
+                                onTap: () =>
+                                    setState(() => _isAllDaysView = false),
                               ),
                               _viewToggleButton(
                                 icon: Icons.view_week_outlined,
-                                label: 'Апта',
+                                label: lang.t('week.allWeek'),
                                 active: _isAllDaysView,
-                                onTap: () => setState(() => _isAllDaysView = true),
+                                onTap: () =>
+                                    setState(() => _isAllDaysView = true),
                               ),
                             ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Text(
                       '${taskProvider.totalCount} ${lang.t('common.tasks')} · ${taskProvider.doneCount} ${lang.t('common.done')} · ${taskProvider.completionPct}%',
                       style: const TextStyle(
@@ -152,7 +192,8 @@ class _WeekPlanScreenState extends State<WeekPlanScreen> {
                             ? taskProvider.doneCount / taskProvider.totalCount
                             : 0.0,
                         backgroundColor: Colors.white.withValues(alpha: 0.25),
-                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor:
+                            const AlwaysStoppedAnimation<Color>(Colors.white),
                         minHeight: 8,
                       ),
                     ),
@@ -161,115 +202,48 @@ class _WeekPlanScreenState extends State<WeekPlanScreen> {
               ),
               const SizedBox(height: 16),
 
-              // ── Day Selector (if single day mode) ──
               if (!_isAllDaysView) ...[
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: List.generate(7, (i) {
-                      final dayNum = i + 1;
-                      final isSelected = taskProvider.selectedDay == dayNum;
-                      final isToday = WeekUtils.isDayToday(taskProvider.weekStartDate, dayNum);
-                      final dayDate = WeekUtils.getDayDate(taskProvider.weekStartDate, dayNum);
-
-                      final dayTasks = taskProvider.tasks.where((t) => t.dayOfWeek == dayNum).toList();
-                      final dayDone = dayTasks.where((t) => t.isDone).length;
-
-                      return GestureDetector(
-                        onTap: () => taskProvider.selectDay(dayNum),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? (isDark ? AppColors.darkPrimary : AppColors.lightPrimary)
-                                : (isDark ? AppColors.darkCard : AppColors.lightCard),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected
-                                  ? Colors.transparent
-                                  : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                dayShort[i],
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: isSelected
-                                      ? Colors.white70
-                                      : (isDark ? Colors.white60 : Colors.black54),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${dayDate.day}',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : (isDark ? Colors.white : Colors.black87),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              if (isToday)
-                                Container(
-                                  width: 5,
-                                  height: 5,
-                                  decoration: BoxDecoration(
-                                    color: isSelected ? Colors.white : AppColors.destructive,
-                                    shape: BoxShape.circle,
-                                  ),
-                                )
-                              else if (dayTasks.isNotEmpty)
-                                Text(
-                                  '$dayDone/${dayTasks.length}',
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w600,
-                                    color: isSelected
-                                        ? Colors.white70
-                                        : (isDark ? Colors.white38 : Colors.black38),
-                                  ),
-                                )
-                              else
-                                const SizedBox(height: 5),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
+                DaySelectorBar(
+                  weekStartDate: taskProvider.weekStartDate,
+                  selectedDay: taskProvider.selectedDay,
+                  tasks: taskProvider.tasks,
+                  lang: lang,
+                  onSelectDay: taskProvider.selectDay,
                 ),
                 const SizedBox(height: 18),
 
-                // Day Tasks Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '${dayNames[taskProvider.selectedDay - 1]} (${selectedDayTasks.length})',
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                    Expanded(
+                      child: Text(
+                        '${dayNames[taskProvider.selectedDay - 1]} (${selectedDayTasks.length})',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     ElevatedButton.icon(
                       onPressed: () {
                         showDialog(
                           context: context,
-                          builder: (_) => AddTaskDialog(defaultDay: taskProvider.selectedDay),
+                          builder: (_) => AddTaskDialog(
+                            defaultDay: taskProvider.selectedDay,
+                          ),
                         );
                       },
-                      icon: const Icon(Icons.add, size: 16),
-                      label: Text(lang.t('common.addTask')),
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: Text(lang.t('common.add')),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                        backgroundColor: primary,
                         foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        minimumSize: const Size(44, 44),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
                       ),
                     ),
                   ],
@@ -277,18 +251,15 @@ class _WeekPlanScreenState extends State<WeekPlanScreen> {
                 const SizedBox(height: 12),
 
                 if (selectedDayTasks.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                      ),
+                  AppCard(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 38,
+                      horizontal: 20,
                     ),
                     child: Center(
                       child: Text(
                         lang.t('week.dayEmpty'),
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
                           color: isDark ? Colors.white54 : Colors.black45,
@@ -309,67 +280,78 @@ class _WeekPlanScreenState extends State<WeekPlanScreen> {
                     );
                   }),
               ] else ...[
-                // ── All 7 Days Overview List ──
                 ...List.generate(7, (i) {
                   final dayNum = i + 1;
-                  final dayDate = WeekUtils.getDayDate(taskProvider.weekStartDate, dayNum);
-                  final dayTasks = taskProvider.tasks.where((t) => t.dayOfWeek == dayNum).toList();
-                  final isToday = WeekUtils.isDayToday(taskProvider.weekStartDate, dayNum);
+                  final dayDate =
+                      WeekUtils.getDayDate(taskProvider.weekStartDate, dayNum);
+                  final dayTasks = taskProvider.tasks
+                      .where((t) => t.dayOfWeek == dayNum)
+                      .toList();
+                  final isToday =
+                      WeekUtils.isDayToday(taskProvider.weekStartDate, dayNum);
 
-                  return Container(
+                  return AppCard(
                     margin: const EdgeInsets.only(bottom: 14),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: isToday
-                            ? (isDark ? AppColors.darkPrimary : AppColors.lightPrimary)
-                            : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                        width: isToday ? 1.5 : 1,
-                      ),
-                    ),
+                    padding: const EdgeInsets.fromLTRB(16, 10, 8, 14),
+                    borderColor: isToday ? primary : null,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                Text(
-                                  '${dayNames[i]} · ${dayDate.day}',
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                if (isToday) ...[
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.destructive,
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: const Text(
-                                      'Бүгін',
-                                      style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      '${dayNames[i]} · ${dayDate.day}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 15.5,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
+                                  if (isToday) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 7,
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.destructive,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        lang.t('common.today'),
+                                        style: const TextStyle(
+                                          fontSize: 10.5,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.add, size: 18),
+                              icon: const Icon(Icons.add_rounded, size: 22),
+                              tooltip: lang.t('common.addTask'),
                               onPressed: () {
                                 showDialog(
                                   context: context,
-                                  builder: (_) => AddTaskDialog(defaultDay: dayNum),
+                                  builder: (_) =>
+                                      AddTaskDialog(defaultDay: dayNum),
                                 );
                               },
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                              constraints: const BoxConstraints(
+                                minWidth: 44,
+                                minHeight: 44,
+                              ),
                             ),
                           ],
                         ),
@@ -377,16 +359,16 @@ class _WeekPlanScreenState extends State<WeekPlanScreen> {
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Text(
-                              'Тапсырма жоқ',
+                              lang.t('week.noTasks'),
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 13,
                                 color: isDark ? Colors.white38 : Colors.black38,
                               ),
                             ),
                           )
                         else
                           Padding(
-                            padding: const EdgeInsets.only(top: 8),
+                            padding: const EdgeInsets.only(top: 6, right: 8),
                             child: Column(
                               children: dayTasks.map((t) {
                                 return TaskItemWidget(
@@ -407,7 +389,6 @@ class _WeekPlanScreenState extends State<WeekPlanScreen> {
                   );
                 }),
               ],
-              const SizedBox(height: 60),
             ],
           ),
         ),
@@ -421,22 +402,32 @@ class _WeekPlanScreenState extends State<WeekPlanScreen> {
     required bool active,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return TapScale(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      minWidth: 44,
+      minHeight: 40,
+      borderRadius: BorderRadius.circular(11),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: active ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(11),
         ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: active ? Colors.black87 : Colors.white),
-            const SizedBox(width: 4),
+            Icon(
+              icon,
+              size: 15,
+              color: active ? Colors.black87 : Colors.white,
+            ),
+            const SizedBox(width: 5),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
                 color: active ? Colors.black87 : Colors.white,
               ),

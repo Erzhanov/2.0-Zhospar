@@ -1,10 +1,12 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
-  final SupabaseClient _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
 
+  Session? get currentSession => _client.auth.currentSession;
   User? get currentUser => _client.auth.currentUser;
-  bool get isAuthenticated => _client.auth.currentUser != null;
+  bool get isAuthenticated =>
+      _client.auth.currentSession != null && _client.auth.currentUser != null;
 
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
@@ -31,8 +33,10 @@ class AuthService {
           : null,
     );
 
-    // Save profile if needed
-    if (res.user != null && displayName != null && displayName.isNotEmpty) {
+    if (res.user != null &&
+        res.session != null &&
+        displayName != null &&
+        displayName.isNotEmpty) {
       try {
         await _client.from('profiles').upsert({
           'user_id': res.user!.id,

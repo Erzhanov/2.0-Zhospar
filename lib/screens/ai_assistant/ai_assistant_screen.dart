@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/i18n/language_provider.dart';
 import '../../core/theme/app_colors.dart';
-import '../../services/ai_service.dart';
 import '../../providers/task_provider.dart';
+import '../../services/ai_service.dart';
+import '../../widgets/common/tap_scale.dart';
 import '../../widgets/plan_review_dialog.dart';
 
 class AIAssistantScreen extends StatefulWidget {
@@ -47,7 +48,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
   }
 
   Future<void> _sendMessage(String text) async {
-    if (text.trim().isEmpty) return;
+    if (text.trim().isEmpty || _isLoading) return;
 
     final lang = Provider.of<LanguageProvider>(context, listen: false);
     final taskProvider = Provider.of<TaskProvider>(context, listen: false);
@@ -59,7 +60,6 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     _inputController.clear();
     _scrollToBottom();
 
-    // Prepare plan context
     final buffer = StringBuffer();
     buffer.writeln('Апта (басталуы ${taskProvider.weekStartDate}):');
     if (taskProvider.currentWeek?.quote.isNotEmpty == true) {
@@ -76,29 +76,33 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
         uiLang: lang.currentLocale,
       );
 
+      if (!mounted) return;
       setState(() {
         _messages.add({'role': 'assistant', 'content': reply});
       });
       _scrollToBottom();
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _messages.add({
           'role': 'assistant',
-          'content': 'Қате орын алды: $e. Қайта көріңіз.',
+          'content': '${lang.t('auth.error')}: $e',
         });
       });
       _scrollToBottom();
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   Future<void> _extractAndReviewPlan(String content) async {
     final lang = Provider.of<LanguageProvider>(context, listen: false);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Жоспар талдануда...'),
-        duration: Duration(seconds: 1),
+      SnackBar(
+        content: Text(lang.t('common.loading')),
+        duration: const Duration(seconds: 1),
       ),
     );
 
@@ -115,13 +119,13 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
         );
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Нақты жоспар табылмады.')),
+          SnackBar(content: Text(lang.t('common.empty'))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Қате: $e')),
+          SnackBar(content: Text('${lang.t('auth.error')}: $e')),
         );
       }
     }
@@ -131,6 +135,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
     final chips = [
       '📚 Оқу жоспарын құру',
@@ -138,40 +143,52 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
       '💪 Мотивация берші',
     ];
 
-    return Scaffold(
-      body: SafeArea(
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 680),
         child: Column(
           children: [
-            // Top App Bar
+            // Sub-header card
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
               child: Row(
                 children: [
                   Container(
-                    width: 36,
-                    height: 36,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       color: AppColors.purple.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.auto_awesome, color: AppColors.purple, size: 20),
+                    child: const Icon(
+                      Icons.auto_awesome,
+                      color: AppColors.purple,
+                      size: 21,
+                    ),
                   ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        lang.t('assistant.title'),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                      Text(
-                        lang.t('assistant.subtitle'),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark ? Colors.white54 : Colors.black54,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          lang.t('assistant.title'),
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-                      ),
-                    ],
+                        Text(
+                          lang.t('assistant.subtitle'),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? Colors.white54 : Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -182,14 +199,16 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
             Expanded(
               child: ListView.builder(
                 controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
                 itemCount: _messages.length,
                 itemBuilder: (context, i) {
                   final msg = _messages[i];
                   final isUser = msg['role'] == 'user';
                   final content = msg['content'] as String;
 
-                  // Check if message might contain plan tasks
                   final hasPlanKeywords = !isUser &&
                       (content.contains('Дүйсенбі') ||
                           content.contains('Понедельник') ||
@@ -202,29 +221,39 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 14),
                     child: Row(
-                      mainAxisAlignment:
-                          isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                      mainAxisAlignment: isUser
+                          ? MainAxisAlignment.end
+                          : MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (!isUser) ...[
                           Container(
-                            width: 30,
-                            height: 30,
+                            width: 32,
+                            height: 32,
                             decoration: BoxDecoration(
                               color: AppColors.purple.withValues(alpha: 0.15),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.auto_awesome, color: AppColors.purple, size: 16),
+                            child: const Icon(
+                              Icons.auto_awesome,
+                              color: AppColors.purple,
+                              size: 16,
+                            ),
                           ),
                           const SizedBox(width: 8),
                         ],
                         Flexible(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
                             decoration: BoxDecoration(
                               color: isUser
-                                  ? (isDark ? AppColors.darkPrimary : AppColors.lightPrimary)
-                                  : (isDark ? AppColors.darkCard : AppColors.lightCard),
+                                  ? primary
+                                  : (isDark
+                                      ? AppColors.darkCard
+                                      : AppColors.lightCard),
                               borderRadius: BorderRadius.only(
                                 topLeft: const Radius.circular(18),
                                 topRight: const Radius.circular(18),
@@ -234,7 +263,9 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                               border: Border.all(
                                 color: isUser
                                     ? Colors.transparent
-                                    : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                    : (isDark
+                                        ? AppColors.darkBorder
+                                        : AppColors.lightBorder),
                               ),
                             ),
                             child: Column(
@@ -243,28 +274,30 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                                 Text(
                                   content,
                                   style: TextStyle(
-                                    fontSize: 14,
-                                    height: 1.4,
+                                    fontSize: 14.5,
+                                    height: 1.45,
                                     color: isUser
                                         ? Colors.white
-                                        : (isDark ? Colors.white : Colors.black87),
+                                        : (isDark
+                                            ? Colors.white
+                                            : Colors.black87),
                                   ),
                                 ),
                                 if (hasPlanKeywords) ...[
                                   const SizedBox(height: 10),
                                   OutlinedButton.icon(
-                                    onPressed: () => _extractAndReviewPlan(content),
-                                    icon: const Icon(Icons.calendar_month, size: 15),
+                                    onPressed: () =>
+                                        _extractAndReviewPlan(content),
+                                    icon: const Icon(
+                                      Icons.calendar_month,
+                                      size: 16,
+                                    ),
                                     label: Text(
                                       lang.t('assistant.extractPlan'),
-                                      style: const TextStyle(fontSize: 12),
+                                      style: const TextStyle(fontSize: 12.5),
                                     ),
                                     style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 6),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
+                                      minimumSize: const Size(44, 44),
                                     ),
                                   ),
                                 ],
@@ -292,9 +325,9 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      'AI жауап дайындауда...',
+                      lang.t('assistant.thinking'),
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 12.5,
                         color: isDark ? Colors.white54 : Colors.black54,
                       ),
                     ),
@@ -302,30 +335,43 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                 ),
               ),
 
-            // Quick Chips
+            // Quick Chips (>= 44px touch targets)
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Row(
                 children: chips.map((c) {
-                  return GestureDetector(
-                    onTap: () => _sendMessage(c),
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: TapScale(
+                      onTap: () => _sendMessage(c),
+                      minHeight: 44,
+                      borderRadius: BorderRadius.circular(18),
+                      child: Container(
+                        constraints: const BoxConstraints(minHeight: 44),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
                         ),
-                      ),
-                      child: Text(
-                        c,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.white70 : Colors.black87,
-                          fontWeight: FontWeight.w500,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkCard
+                              : AppColors.lightCard,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          c,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -334,9 +380,9 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
               ),
             ),
 
-            // Input Bar
+            // Thumb-friendly Input Bar
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 6, 16, 14),
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
               child: Row(
                 children: [
                   Expanded(
@@ -345,26 +391,48 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                       onSubmitted: _sendMessage,
                       decoration: InputDecoration(
                         hintText: lang.t('assistant.hint'),
-                        filled: true,
-                        fillColor: isDark ? AppColors.darkCard : AppColors.lightCard,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(22),
                           borderSide: BorderSide(
-                            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder,
                           ),
                         ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(22),
+                          borderSide: BorderSide(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 13,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  IconButton(
-                    icon: Icon(
-                      Icons.send_rounded,
-                      color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  TapScale(
+                    onTap: () => _sendMessage(_inputController.text),
+                    minWidth: 48,
+                    minHeight: 48,
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.send_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
-                    onPressed: () => _sendMessage(_inputController.text),
                   ),
                 ],
               ),

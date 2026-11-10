@@ -3,19 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
-import 'core/theme/app_theme.dart';
 import 'core/i18n/language_provider.dart';
+import 'core/routing/app_router.dart';
+import 'core/routing/app_routes.dart';
+import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
-import 'providers/theme_provider.dart';
-import 'providers/task_provider.dart';
 import 'providers/music_provider.dart';
-import 'screens/landing/landing_screen.dart';
-import 'screens/app_shell.dart';
+import 'providers/task_provider.dart';
+import 'providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -23,24 +22,37 @@ void main() async {
     ),
   );
 
-  // Initialize Supabase
   await Supabase.initialize(
     url: SupabaseConfig.url,
     anonKey: SupabaseConfig.anonKey, // ignore: deprecated_member_use
   );
 
-  runApp(
-    MultiProvider(
+  runApp(const ZhosparRoot());
+}
+
+class ZhosparRoot extends StatelessWidget {
+  const ZhosparRoot({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => TaskProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, TaskProvider>(
+          create: (_) => TaskProvider(),
+          update: (_, auth, taskProvider) {
+            final provider = taskProvider ?? TaskProvider();
+            provider.syncAuthUser(auth.isAuthenticated ? auth.user?.id : null);
+            return provider;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => MusicProvider()),
       ],
       child: const ZhosparApp(),
-    ),
-  );
+    );
+  }
 }
 
 class ZhosparApp extends StatelessWidget {
@@ -49,7 +61,6 @@ class ZhosparApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeProvider>(context);
-    final auth = Provider.of<AuthProvider>(context);
 
     return MaterialApp(
       title: 'ZHOSPAR',
@@ -57,7 +68,8 @@ class ZhosparApp extends StatelessWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: theme.themeMode,
-      home: auth.isAuthenticated ? const AppShell() : const LandingScreen(),
+      initialRoute: AppRoutes.root,
+      onGenerateRoute: AppRouter.onGenerateRoute,
     );
   }
 }

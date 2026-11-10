@@ -5,7 +5,7 @@ import '../models/weekly_review.dart';
 import '../core/utils/week_utils.dart';
 
 class WeekService {
-  final SupabaseClient _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
 
   String? get _userId => _client.auth.currentUser?.id;
 

@@ -4,7 +4,7 @@ import '../core/utils/week_utils.dart';
 import 'week_service.dart';
 
 class TaskService {
-  final SupabaseClient _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
   final WeekService _weekService = WeekService();
 
   String? get _userId => _client.auth.currentUser?.id;

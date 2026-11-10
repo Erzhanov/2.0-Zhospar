@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../core/i18n/language_provider.dart';
 import '../core/theme/app_colors.dart';
 
 class OnboardingDialog extends StatefulWidget {
@@ -13,7 +15,9 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
     final steps = [
       {
@@ -39,118 +43,125 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
     final step = steps[_currentStep];
 
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
-      child: Container(
-        padding: const EdgeInsets.all(24),
+      child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 22),
+                  tooltip: lang.t('nav.close'),
                   onPressed: () => Navigator.of(context).pop(),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkPrimary.withValues(alpha: 0.2)
-                    : AppColors.lightPrimary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
               ),
-              alignment: Alignment.center,
-              child: Icon(
-                step['icon'] as IconData,
-                size: 36,
-                color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+              const SizedBox(height: 6),
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: isDark ? 0.2 : 0.12),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  step['icon'] as IconData,
+                  size: 36,
+                  color: primary,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              step['title'] as String,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              step['desc'] as String,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: isDark ? Colors.white60 : Colors.black54,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(3, (i) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: i == _currentStep ? 24 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: i == _currentStep
-                        ? (isDark ? AppColors.darkPrimary : AppColors.lightPrimary)
-                        : (isDark ? Colors.white24 : Colors.black12),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                if (_currentStep > 0)
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => setState(() => _currentStep--),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              const SizedBox(height: 20),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: Column(
+                  key: ValueKey<int>(_currentStep),
+                  children: [
+                    Text(
+                      step['title'] as String,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
                       ),
-                      child: const Text('Артқа'),
                     ),
-                  ),
-                if (_currentStep > 0) const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_currentStep < 2) {
-                        setState(() => _currentStep++);
-                      } else {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      elevation: 0,
+                    const SizedBox(height: 10),
+                    Text(
+                      step['desc'] as String,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark ? Colors.white60 : Colors.black54,
+                        height: 1.45,
+                      ),
                     ),
-                    child: Text(
-                      _currentStep == 2 ? 'Бастау' : 'Келесі',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(steps.length, (i) {
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: i == _currentStep ? 24 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: i == _currentStep
+                          ? primary
+                          : (isDark ? Colors.white24 : Colors.black12),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  if (_currentStep > 0) ...[
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => setState(() => _currentStep--),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(44, 48),
+                        ),
+                        child: Text(lang.t('nav.back')),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (_currentStep < steps.length - 1) {
+                          setState(() => _currentStep++);
+                        } else {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primary,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(44, 48),
+                      ),
+                      child: Text(
+                        _currentStep == steps.length - 1 ? 'Бастау' : 'Келесі',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
