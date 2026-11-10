@@ -18,8 +18,13 @@ import 'widgets/task_item_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   final ValueChanged<int>? onNavigateTab;
+  final VoidCallback? onOpenAnalytics;
 
-  const DashboardScreen({super.key, this.onNavigateTab});
+  const DashboardScreen({
+    super.key,
+    this.onNavigateTab,
+    this.onOpenAnalytics,
+  });
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -262,9 +267,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               // Levitating Zero-G Hero Card (tap opens Analytics)
               TapScale(
-                onTap: widget.onNavigateTab != null
-                    ? () => widget.onNavigateTab!(2)
-                    : null,
+                onTap: widget.onOpenAnalytics ??
+                    () => Navigator.of(context).pushNamed(AppRoutes.analytics),
                 borderRadius: BorderRadius.circular(26),
                 child: GlassSurface(
                   borderRadius: 26,
@@ -705,7 +709,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         icon: Icons.auto_awesome_rounded,
                         label: lang.t('nav.assistant'),
                         color: accent,
-                        onTap: () => widget.onNavigateTab?.call(3),
+                        onTap: () => widget.onNavigateTab?.call(2),
                       ),
                     ],
                   );

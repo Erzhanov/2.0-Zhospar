@@ -7,6 +7,8 @@ import '../../../data/models/task.dart';
 import '../../../shared/widgets/floating_motion.dart';
 import '../../../shared/widgets/glass_surface.dart';
 import '../../../state/task_provider.dart';
+import 'task_detail_sheet.dart';
+import 'task_form_sheet.dart';
 
 class TaskItemWidget extends StatelessWidget {
   final TaskModel task;
@@ -19,6 +21,21 @@ class TaskItemWidget extends StatelessWidget {
     this.onEdit,
     this.compact = false,
   });
+
+  void _openDetail(
+    BuildContext context,
+    TaskProvider taskProvider,
+    LanguageProvider lang,
+  ) {
+    PlatformAdaptive.hapticSelection();
+    showTaskDetailModal(
+      context,
+      task: task,
+      onEdit: onEdit ??
+          () => showTaskFormModal(context, taskToEdit: task),
+      onDeleteConfirmed: () => _deleteWithUndo(context, taskProvider, lang),
+    );
+  }
 
   void _deleteWithUndo(
     BuildContext context,
@@ -152,7 +169,7 @@ class TaskItemWidget extends StatelessWidget {
 
             Expanded(
               child: GestureDetector(
-                onTap: onEdit,
+                onTap: () => _openDetail(context, taskProvider, lang),
                 behavior: HitTestBehavior.opaque,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
@@ -268,25 +285,15 @@ class TaskItemWidget extends StatelessWidget {
               ),
             ),
 
-            if (onEdit != null)
-              IconButton(
-                icon: Icon(
-                  Icons.edit_outlined,
-                  size: 19,
-                  color: isDark ? Colors.white54 : Colors.black45,
-                ),
-                tooltip: lang.t('common.edit'),
-                onPressed: onEdit,
-                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-              ),
             IconButton(
+              key: ValueKey('task-view-${task.id}'),
               icon: Icon(
-                Icons.delete_outline_rounded,
+                Icons.visibility_outlined,
                 size: 19,
                 color: isDark ? Colors.white54 : Colors.black45,
               ),
-              tooltip: lang.t('common.delete'),
-              onPressed: () => _deleteWithUndo(context, taskProvider, lang),
+              tooltip: lang.t('task.view'),
+              onPressed: () => _openDetail(context, taskProvider, lang),
               constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             ),
           ],
@@ -327,8 +334,19 @@ class TaskItemWidget extends StatelessWidget {
           taskProvider.toggleTaskStatus(task.id);
           return false;
         } else {
-          _deleteWithUndo(context, taskProvider, lang);
-          return true;
+          final confirmed = await showAdaptiveConfirmDialog(
+            context,
+            title: lang.t('task.deleteConfirmTitle'),
+            body: lang.t('task.deleteConfirmBody'),
+            confirmLabel: lang.t('common.delete'),
+            cancelLabel: lang.t('common.cancel'),
+            destructive: true,
+          );
+          if (confirmed && context.mounted) {
+            _deleteWithUndo(context, taskProvider, lang);
+            return true;
+          }
+          return false;
         }
       },
       child: itemWidget,

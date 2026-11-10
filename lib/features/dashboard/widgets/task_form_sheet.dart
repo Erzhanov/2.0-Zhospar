@@ -32,6 +32,7 @@ Future<void> showTaskFormModal(
         initialCategory: taskToEdit?.category,
         initialPriority: taskToEdit?.priority ?? 'med',
         autofocusTitle: !isEditing,
+        requireEditConfirm: isEditing,
         onSubmit: ({
           required int dayOfWeek,
           required String title,
@@ -76,6 +77,7 @@ class TaskFormModal extends StatefulWidget {
   final String? initialCategory;
   final String initialPriority;
   final bool autofocusTitle;
+  final bool requireEditConfirm;
   final Future<void> Function({
     required int dayOfWeek,
     required String title,
@@ -97,6 +99,7 @@ class TaskFormModal extends StatefulWidget {
     this.initialCategory,
     this.initialPriority = 'med',
     this.autofocusTitle = false,
+    this.requireEditConfirm = false,
   });
 
   @override
@@ -157,6 +160,17 @@ class _TaskFormModalState extends State<TaskFormModal> {
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate() || _submitting) return;
+    if (widget.requireEditConfirm) {
+      final lang = Provider.of<LanguageProvider>(context, listen: false);
+      final confirmed = await showAdaptiveConfirmDialog(
+        context,
+        title: lang.t('task.editConfirmTitle'),
+        body: lang.t('task.editConfirmBody'),
+        confirmLabel: lang.t('common.confirm'),
+        cancelLabel: lang.t('common.cancel'),
+      );
+      if (!confirmed || !mounted) return;
+    }
     setState(() => _submitting = true);
     try {
       await widget.onSubmit(

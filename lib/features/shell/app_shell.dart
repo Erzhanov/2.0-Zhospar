@@ -13,14 +13,13 @@ import '../../state/music_provider.dart';
 import '../../state/task_provider.dart';
 import '../../state/timer_provider.dart';
 import '../ai_assistant/ai_assistant_screen.dart';
-import '../analytics/analytics_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../dashboard/widgets/task_form_sheet.dart';
+import '../settings/settings_screen.dart';
 import '../week_plan/week_plan_screen.dart';
 import 'widgets/animated_bottom_nav_bar.dart';
 import 'widgets/desktop_sidebar.dart';
 import 'widgets/mobile_more_sheet.dart';
-import 'widgets/top_app_bar.dart';
 
 class AppShell extends StatefulWidget {
   final int initialIndex;
@@ -104,16 +103,16 @@ class _AppShellState extends State<AppShell> {
         AppNavConfig.visibleSecondaryItems(isAdmin: auth.isAdmin);
 
     final pages = [
-      DashboardScreen(onNavigateTab: _selectTab),
+      DashboardScreen(
+        onNavigateTab: _selectTab,
+        onOpenAnalytics: () =>
+            Navigator.of(context).pushNamed(AppRoutes.analytics),
+      ),
       const WeekPlanScreen(),
-      const AnalyticsScreen(),
       const AIAssistantScreen(),
+      const SettingsScreen(embedded: true),
     ];
 
-    final headerTitle = _currentIndex == 0
-        ? 'ZHOSPAR'
-        : lang.t(primaryItems[_currentIndex].labelKey);
-    final headerSubtitle = _currentIndex == 0 ? lang.t('nav.appName') : null;
     final showAddTaskFab = _currentIndex == 0 || _currentIndex == 1;
 
     return PopScope(
@@ -127,13 +126,6 @@ class _AppShellState extends State<AppShell> {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           extendBody: true,
-          appBar: TopAppBar(
-            title: headerTitle,
-            subtitle: headerSubtitle,
-            isSubPage: false,
-            onOpenSettings: () =>
-                Navigator.of(context).pushNamed(AppRoutes.settings),
-          ),
           body: Stack(
             children: [
               Row(

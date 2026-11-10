@@ -17,7 +17,9 @@ import '../shell/widgets/top_app_bar.dart';
 import 'widgets/onboarding_dialog.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
+  final bool embedded;
+
+  const SettingsScreen({super.key, this.embedded = false});
 
   Future<void> _confirmSignOut(
     BuildContext context,
@@ -91,17 +93,11 @@ class SettingsScreen extends StatelessWidget {
     final initial =
         displayName.isNotEmpty ? displayName[0].toUpperCase() : 'Z';
 
-    return AmbientSpaceBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: TopAppBar(
-          title: lang.t('settings.title'),
-          isSubPage: true,
-        ),
-        body: SingleChildScrollView(
-          physics: PlatformAdaptive.scrollPhysics(context),
-          child: MobilePageContainer(
-            child: Column(
+    final content = SingleChildScrollView(
+      physics: PlatformAdaptive.scrollPhysics(context),
+      child: MobilePageContainer(
+        bottomClearance: embedded ? 100 : 32,
+        child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SpringPopIn(
@@ -603,7 +599,18 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
           ),
+        );
+
+    if (embedded) return content;
+
+    return AmbientSpaceBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: TopAppBar(
+          title: lang.t('settings.title'),
+          isSubPage: true,
         ),
+        body: content,
       ),
     );
   }

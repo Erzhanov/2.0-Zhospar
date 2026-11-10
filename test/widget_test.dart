@@ -11,6 +11,7 @@ import 'package:zhospar_app/app/router/app_routes.dart';
 import 'package:zhospar_app/core/i18n/language_provider.dart';
 import 'package:zhospar_app/core/platform/platform_adaptive.dart';
 import 'package:zhospar_app/core/theme/app_theme.dart';
+import 'package:zhospar_app/core/utils/week_utils.dart';
 import 'package:zhospar_app/data/models/daily_reflection.dart';
 import 'package:zhospar_app/data/models/task.dart';
 import 'package:zhospar_app/data/models/week.dart';
@@ -19,8 +20,10 @@ import 'package:zhospar_app/data/services/auth_service.dart';
 import 'package:zhospar_app/data/services/task_service.dart';
 import 'package:zhospar_app/data/services/week_service.dart';
 import 'package:zhospar_app/features/analytics/analytics_screen.dart';
+import 'package:zhospar_app/features/archive/archive_screen.dart';
 import 'package:zhospar_app/features/auth/auth_screen.dart';
 import 'package:zhospar_app/features/dashboard/dashboard_screen.dart';
+import 'package:zhospar_app/features/dashboard/widgets/task_detail_sheet.dart';
 import 'package:zhospar_app/features/dashboard/widgets/task_form_sheet.dart';
 import 'package:zhospar_app/features/dashboard/widgets/task_item_widget.dart';
 import 'package:zhospar_app/features/landing/landing_screen.dart';
@@ -28,6 +31,7 @@ import 'package:zhospar_app/features/settings/settings_screen.dart';
 import 'package:zhospar_app/features/shell/app_shell.dart';
 import 'package:zhospar_app/features/shell/widgets/animated_bottom_nav_bar.dart';
 import 'package:zhospar_app/features/shell/widgets/mobile_more_sheet.dart';
+import 'package:zhospar_app/features/shell/widgets/top_app_bar.dart';
 import 'package:zhospar_app/features/timer/timer_screen.dart';
 import 'package:zhospar_app/shared/widgets/floating_motion.dart';
 import 'package:zhospar_app/state/ai_chat_provider.dart';
@@ -118,8 +122,14 @@ class _FakeAuthService implements AuthService {
 }
 
 class _FakeWeekService implements WeekService {
+  final List<WeekModel>? weeksOverride;
+
+  _FakeWeekService({this.weeksOverride});
+
   @override
-  Future<List<WeekModel>> getAllWeeks() async => [
+  Future<List<WeekModel>> getAllWeeks() async =>
+      weeksOverride ??
+      [
         WeekModel(
           id: 'w1',
           userId: 'user-123',
@@ -172,8 +182,12 @@ class _FakeWeekService implements WeekService {
 
 class _FakeTaskService implements TaskService {
   final List<TaskModel> seedTasks;
+  final Map<String, List<TaskModel>>? weekTasksMap;
+  final List<Map<String, dynamic>> updatedTaskCalls = [];
+  final List<String> deletedTaskIds = [];
+  late final List<TaskModel> _tasks = List.of(seedTasks);
 
-  _FakeTaskService([this.seedTasks = const []]);
+  _FakeTaskService([this.seedTasks = const [], this.weekTasksMap]);
 
   @override
   Future<TaskModel?> addTask({
@@ -184,18 +198,21 @@ class _FakeTaskService implements TaskService {
     String? category,
     String priority = 'med',
     String? dueTime,
-  }) async =>
-      TaskModel(
-        id: 't-new',
-        weekId: weekId,
-        userId: 'user-123',
-        dayOfWeek: dayOfWeek,
-        title: title,
-        description: description,
-        category: category,
-        priority: priority,
-        dueTime: dueTime,
-      );
+  }) async {
+    final created = TaskModel(
+      id: 't-new',
+      weekId: weekId,
+      userId: 'user-123',
+      dayOfWeek: dayOfWeek,
+      title: title,
+      description: description,
+      category: category,
+      priority: priority,
+      dueTime: dueTime,
+    );
+    _tasks.add(created);
+    return created;
+  }
 
   @override
   Future<int> copyIncompleteTasks(
@@ -205,17 +222,26 @@ class _FakeTaskService implements TaskService {
       0;
 
   @override
-  Future<void> deleteTask(String id) async {}
+  Future<void> deleteTask(String id) async {
+    deletedTaskIds.add(id);
+    _tasks.removeWhere((t) => t.id == id);
+  }
 
   @override
   Future<List<TaskModel>> getTasksForWeek(String weekId) async =>
-      List.of(seedTasks);
+      List.of(_tasks);
 
   @override
   Future<Map<String, List<TaskModel>>> getTasksForWeeks(
     List<String> weekIds,
-  ) async =>
-      {for (final id in weekIds) id: List.of(seedTasks)};
+  ) async {
+    if (weekTasksMap != null) {
+      return {
+        for (final id in weekIds) id: List.of(weekTasksMap![id] ?? const []),
+      };
+    }
+    return {for (final id in weekIds) id: List.of(_tasks)};
+  }
 
   @override
   Future<int> replaceTasksForWeek(
@@ -225,7 +251,27 @@ class _FakeTaskService implements TaskService {
       tasks.length;
 
   @override
-  Future<void> updateTask(String id, Map<String, dynamic> updates) async {}
+  Future<void> updateTask(String id, Map<String, dynamic> updates) async {
+    updatedTaskCalls.add({'id': id, ...updates});
+    final idx = _tasks.indexWhere((t) => t.id == id);
+    if (idx != -1) {
+      final cur = _tasks[idx];
+      _tasks[idx] = cur.copyWith(
+        title: updates['title'] as String? ?? cur.title,
+        description: updates.containsKey('description')
+            ? updates['description'] as String?
+            : cur.description,
+        category: updates.containsKey('category')
+            ? updates['category'] as String?
+            : cur.category,
+        priority: updates['priority'] as String? ?? cur.priority,
+        dueTime: updates.containsKey('due_time')
+            ? updates['due_time'] as String?
+            : cur.dueTime,
+        status: updates['status'] as String? ?? cur.status,
+      );
+    }
+  }
 }
 
 Widget _buildTestApp({
@@ -388,13 +434,23 @@ void main() {
       await tester.pumpWidget(_buildTestApp(authProvider: authProvider));
       await tester.pumpAndSettle();
 
+      // Primary AppShell omits TopAppBar; pushed sub-pages render TopAppBar with Back
+      expect(find.byType(TopAppBar), findsNothing);
+
       expect(find.byType(AppShell), findsOneWidget);
 
-      // Open Settings via TopAppBar action icon
-      await tester.tap(find.byIcon(Icons.settings_outlined).first);
+      // Open More sheet -> navigate to AnalyticsScreen sub-page
+      await tester.tap(find.byIcon(Icons.grid_view_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(MobileMoreSheet),
+          matching: find.byIcon(Icons.bar_chart_outlined),
+        ),
+      );
       await tester.pumpAndSettle();
 
-      expect(find.byType(SettingsScreen), findsOneWidget);
+      expect(find.byType(AnalyticsScreen), findsOneWidget);
       final backIcon = find.byIcon(Icons.arrow_back_rounded);
       expect(backIcon, findsOneWidget);
       final backButton = find.ancestor(
@@ -414,7 +470,7 @@ void main() {
       await tester.tap(backIcon);
       await tester.pumpAndSettle();
 
-      expect(find.byType(SettingsScreen), findsNothing);
+      expect(find.byType(AnalyticsScreen), findsNothing);
       expect(find.byType(AppShell), findsOneWidget);
 
       // Open More sheet -> navigate to TimerScreen
@@ -476,33 +532,45 @@ void main() {
       expect(find.byType(AnimatedBottomNavBar), findsOneWidget);
       expect(find.byType(TaskItemWidget), findsOneWidget);
 
-      // Verify bottom nav bar height >= 44px and task action icons >= 44x44px
+      // Verify bottom nav bar height >= 44px, inline edit/delete removed, and view icon >= 44x44px
       final navSize = tester.getSize(find.byType(AnimatedBottomNavBar));
       expect(navSize.height, greaterThanOrEqualTo(44));
-
-      final taskEditButton = find.descendant(
-        of: find.byType(TaskItemWidget),
-        matching: find.ancestor(
-          of: find.byIcon(Icons.edit_outlined),
-          matching: find.byType(IconButton),
+      expect(
+        find.descendant(
+          of: find.byType(AnimatedBottomNavBar),
+          matching: find.byIcon(Icons.bar_chart_outlined),
         ),
+        findsNothing,
       );
-      expect(tester.getSize(taskEditButton.first).width, greaterThanOrEqualTo(44));
-      expect(tester.getSize(taskEditButton.first).height, greaterThanOrEqualTo(44));
 
-      final taskDeleteButton = find.descendant(
+      expect(
+        find.descendant(
+          of: find.byType(TaskItemWidget),
+          matching: find.byIcon(Icons.edit_outlined),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(TaskItemWidget),
+          matching: find.byIcon(Icons.delete_outline_rounded),
+        ),
+        findsNothing,
+      );
+
+      final taskViewButton = find.descendant(
         of: find.byType(TaskItemWidget),
         matching: find.ancestor(
-          of: find.byIcon(Icons.delete_outline_rounded),
+          of: find.byIcon(Icons.visibility_outlined),
           matching: find.byType(IconButton),
         ),
       );
       expect(
-        tester.getSize(taskDeleteButton.first).width,
+        tester.getSize(taskViewButton.first).width,
         greaterThanOrEqualTo(44),
       );
       expect(
-        tester.getSize(taskDeleteButton.first).height,
+        tester.getSize(taskViewButton.first).height,
         greaterThanOrEqualTo(44),
       );
 
@@ -511,18 +579,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Апталық Жоспар'), findsOneWidget);
 
-      // Tap Analytics tab
-      await tester.tap(find.byIcon(Icons.bar_chart_outlined));
-      await tester.pumpAndSettle();
-      expect(find.text('Аналитика'), findsWidgets);
-
-      // Tap AI Assistant tab
+      // Tap AI Assistant tab (slot 2)
       await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
       await tester.pumpAndSettle();
       expect(find.text('AI Көмекші'), findsWidgets);
 
-      // Open Settings via TopAppBar and verify confirmed sign-out returns to AuthScreen
-      await tester.tap(find.byIcon(Icons.settings_outlined).first);
+      // Tap Settings tab (slot 3) in bottom bar and verify confirmed sign-out returns to AuthScreen
+      await tester.tap(find.byIcon(Icons.settings_outlined).last);
       await tester.pumpAndSettle();
       expect(find.byType(SettingsScreen), findsOneWidget);
       final logoutButton = find.byIcon(Icons.logout_rounded).last;
@@ -655,12 +718,20 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Switch to Dark mode via TopAppBar theme button
-      await tester.tap(find.byIcon(Icons.dark_mode_outlined).first);
+      // Switch to Dark mode via Settings tab (no TopAppBar on AppShell)
+      expect(find.byType(TopAppBar), findsNothing);
+      await tester.tap(find.byIcon(Icons.settings_outlined).last);
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.light_mode_outlined), findsWidgets);
+      final darkBtn = find.byKey(const ValueKey('theme-option-dark'));
+      await tester.ensureVisible(darkBtn);
+      await tester.tap(darkBtn);
+      await tester.pumpAndSettle();
+      expect(
+        Theme.of(tester.element(find.byType(SettingsScreen))).brightness,
+        Brightness.dark,
+      );
 
-      // Open frosted glass More sheet
+      // Open frosted glass More sheet in Dark mode
       await tester.tap(find.byIcon(Icons.grid_view_rounded));
       await tester.pumpAndSettle();
       expect(find.byType(MobileMoreSheet), findsOneWidget);
@@ -700,12 +771,26 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Open Settings on iOS -> uses Cupertino back icon
-      await tester.tap(find.byIcon(Icons.settings_outlined).first);
+      // Open Analytics sub-page on iOS via More sheet -> uses Cupertino back icon
+      await tester.tap(find.byIcon(Icons.grid_view_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(MobileMoreSheet),
+          matching: find.byIcon(Icons.bar_chart_outlined),
+        ),
+      );
       await tester.pumpAndSettle();
 
-      expect(find.byType(SettingsScreen), findsOneWidget);
+      expect(find.byType(AnalyticsScreen), findsOneWidget);
       expect(find.byIcon(Icons.arrow_back_ios_new_rounded), findsOneWidget);
+
+      // Pop Analytics back to AppShell and switch to Settings tab
+      await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.settings_outlined).last);
+      await tester.pumpAndSettle();
+      expect(find.byType(SettingsScreen), findsOneWidget);
 
       // Scrollable on iOS uses BouncingScrollPhysics
       final scrollable = tester.widget<SingleChildScrollView>(
@@ -825,12 +910,28 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 350));
 
-      // TopAppBar shows live timer pill while running
+      // Primary AppShell has no TopAppBar; open TimerScreen via More sheet & verify live countdown
+      expect(find.byType(TopAppBar), findsNothing);
+      await tester.tap(find.byIcon(Icons.grid_view_rounded));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(MobileMoreSheet),
+          matching: find.byIcon(Icons.timer_outlined),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(find.byType(TimerScreen), findsOneWidget);
       expect(find.textContaining('24:'), findsOneWidget);
 
       timerProvider.reset();
       expect(timerProvider.isRunning, isFalse);
       expect(timerProvider.formattedTime, '25:00');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
       await tester.pumpAndSettle();
 
       // Tapping FAB opens adaptive TaskFormModal
@@ -900,8 +1001,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(AnalyticsScreen), findsWidgets);
 
+      // Pop AnalyticsScreen back to AppShell, then switch to Settings tab
+      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.pumpAndSettle();
+
       // 2) Open Settings: toggle Haptics & update display name
-      await tester.tap(find.byIcon(Icons.settings_outlined).first);
+      await tester.tap(find.byIcon(Icons.settings_outlined).last);
       await tester.pumpAndSettle();
       expect(find.byType(SettingsScreen), findsOneWidget);
 
@@ -922,9 +1027,7 @@ void main() {
       expect(authProvider.user?.userMetadata?['display_name'], 'Nurlan');
       expect(find.text('Nurlan'), findsOneWidget);
 
-      // 3) Pop Settings & test Timer -5 / +5 duration adjusters
-      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
-      await tester.pumpAndSettle();
+      // 3) Open More sheet directly from Settings tab & test Timer -5 / +5 duration adjusters
       await tester.tap(find.byIcon(Icons.grid_view_rounded));
       await tester.pumpAndSettle();
       await tester.tap(
@@ -1000,7 +1103,7 @@ void main() {
       expect(navBar, findsOneWidget);
       final navRect = tester.getRect(navBar);
 
-      // Drag from slot 0 (Home) to slot 2 (Analytics, middle of capsule)
+      // Drag from slot 0 (Home) to slot 2 (AI Assistant, middle of capsule)
       final startPoint = Offset(navRect.left + navRect.width * 0.12, navRect.center.dy);
       final gesture = await tester.startGesture(startPoint);
       await tester.pump();
@@ -1009,7 +1112,290 @@ void main() {
       await gesture.up();
       await tester.pumpAndSettle();
 
-      expect(find.text('Аналитика'), findsWidgets);
+      expect(find.text('AI Көмекші'), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'TaskDetailModal replaces inline edit/delete icons and enforces confirmation on edit and delete',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final user = User(
+        id: 'user-123',
+        appMetadata: const {},
+        userMetadata: const {'display_name': 'Ayan'},
+        aud: 'authenticated',
+        createdAt: '2026-01-01T00:00:00Z',
+        email: 'ayan@example.com',
+      );
+      final session = Session(
+        accessToken: 'token-abc',
+        tokenType: 'bearer',
+        user: user,
+      );
+      final authProvider = AuthProvider(
+        authService: _FakeAuthService(initialSession: session),
+      );
+      final fakeTaskService = _FakeTaskService([
+        TaskModel(
+          id: 't-view-1',
+          weekId: 'w1',
+          userId: 'user-123',
+          dayOfWeek: DateTime.now().weekday,
+          title: 'Draft Spec',
+          description: 'Detailed notes',
+          category: 'Жоба',
+          priority: 'high',
+          dueTime: '14:30',
+        ),
+      ]);
+      final taskProvider = TaskProvider(
+        taskService: fakeTaskService,
+        weekService: _FakeWeekService(),
+      );
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          authProvider: authProvider,
+          taskProvider: taskProvider,
+          viewport: const Size(390, 844),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Scroll task card clear of bottom-right FAB, then open Task View modal
+      await tester.drag(
+        find.byType(SingleChildScrollView).first,
+        const Offset(0, -200),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('task-view-t-view-1')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TaskDetailModal), findsOneWidget);
+      expect(find.text('Draft Spec'), findsWidgets);
+      expect(find.text('Detailed notes'), findsOneWidget);
+      expect(find.byKey(const ValueKey('task-detail-delete')), findsOneWidget);
+      expect(find.byKey(const ValueKey('task-detail-edit')), findsOneWidget);
+
+      // Edit flow requires confirmation dialog before saving
+      await tester.tap(find.byKey(const ValueKey('task-detail-edit')));
+      await tester.pumpAndSettle();
+      expect(find.byType(TaskFormModal), findsOneWidget);
+
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(TaskFormModal),
+          matching: find.byType(TextField),
+        ).first,
+        'Updated Spec',
+      );
+      await tester.tap(find.text('Сақтау').last);
+      await tester.pumpAndSettle();
+      expect(find.text('Өзгерістерді сақтау'), findsOneWidget);
+
+      // Cancel keeps task unedited
+      await tester.tap(find.text('Болдырмау').last);
+      await tester.pumpAndSettle();
+      expect(fakeTaskService.updatedTaskCalls, isEmpty);
+
+      // Save & Confirm applies edit
+      await tester.tap(find.text('Сақтау').last);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(FilledButton),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(fakeTaskService.updatedTaskCalls.length, 1);
+      expect(fakeTaskService.updatedTaskCalls.first['title'], 'Updated Spec');
+      expect(find.text('Updated Spec'), findsOneWidget);
+
+      // Re-open View modal -> Delete flow requires confirmation dialog
+      await tester.tap(find.byKey(const ValueKey('task-view-t-view-1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('task-detail-delete')));
+      await tester.pumpAndSettle();
+      expect(find.text('Жоспарды жою'), findsOneWidget);
+
+      // Cancel keeps task
+      await tester.tap(find.text('Болдырмау').last);
+      await tester.pumpAndSettle();
+      expect(fakeTaskService.deletedTaskIds, isEmpty);
+
+      // Confirm removes task
+      await tester.tap(find.byKey(const ValueKey('task-detail-delete')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(FilledButton),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(fakeTaskService.deletedTaskIds, ['t-view-1']);
+      expect(find.text('Updated Spec'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'ArchiveScreen excludes weeks without tasks and AppNavConfig enforces exact tab and More ordering',
+    (tester) async {
+      expect(
+        AppNavConfig.primaryItems.map((e) => e.route).toList(),
+        [
+          AppRoutes.home,
+          AppRoutes.week,
+          AppRoutes.assistant,
+          AppRoutes.settings,
+        ],
+      );
+      expect(
+        AppNavConfig.secondaryItems.map((e) => e.route).toList(),
+        [
+          AppRoutes.timer,
+          AppRoutes.analytics,
+          AppRoutes.weeklyReview,
+          AppRoutes.archive,
+          AppRoutes.admin,
+        ],
+      );
+
+      final user = User(
+        id: 'user-123',
+        appMetadata: const {},
+        userMetadata: const {'display_name': 'Ayan'},
+        aud: 'authenticated',
+        createdAt: '2026-01-01T00:00:00Z',
+        email: 'ayan@example.com',
+      );
+      final session = Session(
+        accessToken: 'token-abc',
+        tokenType: 'bearer',
+        user: user,
+      );
+      final authProvider = AuthProvider(
+        authService: _FakeAuthService(initialSession: session),
+      );
+
+      // Verify More sheet renders Timer -> Analytics -> Review -> Archive top-to-bottom
+      await tester.pumpWidget(
+        _buildTestApp(
+          authProvider: authProvider,
+          viewport: const Size(390, 844),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.grid_view_rounded));
+      await tester.pumpAndSettle();
+
+      // Verify More sheet renders 3-column grid on 390px viewport in order:
+      // Row 1: Timer -> Analytics -> Review; Row 2: Archive
+      final timerPos = tester.getCenter(
+        find.descendant(
+          of: find.byType(MobileMoreSheet),
+          matching: find.text('Таймер'),
+        ),
+      );
+      final analyticsPos = tester.getCenter(
+        find.descendant(
+          of: find.byType(MobileMoreSheet),
+          matching: find.text('Аналитика'),
+        ),
+      );
+      final reviewPos = tester.getCenter(
+        find.descendant(
+          of: find.byType(MobileMoreSheet),
+          matching: find.text('Қорытынды'),
+        ),
+      );
+      final archivePos = tester.getCenter(
+        find.descendant(
+          of: find.byType(MobileMoreSheet),
+          matching: find.text('Мұрағат'),
+        ),
+      );
+
+      expect(timerPos.dx, lessThan(analyticsPos.dx));
+      expect(analyticsPos.dx, lessThan(reviewPos.dx));
+      expect(reviewPos.dy, lessThan(archivePos.dy));
+
+      // Verify ArchiveScreen excludes weeks with 0 tasks
+      final fakeWeeks = _FakeWeekService(
+        weeksOverride: [
+          WeekModel(
+            id: 'w-filled',
+            userId: 'user-123',
+            weekStartDate: '2026-11-02',
+            quote: '',
+          ),
+          WeekModel(
+            id: 'w-empty',
+            userId: 'user-123',
+            weekStartDate: '2026-10-26',
+            quote: '',
+          ),
+        ],
+      );
+      final fakeTasks = _FakeTaskService(
+        const [],
+        {
+          'w-filled': [
+            TaskModel(
+              id: 't-arch-1',
+              weekId: 'w-filled',
+              userId: 'user-123',
+              dayOfWeek: 1,
+              title: 'Archived Task',
+              status: 'done',
+            ),
+          ],
+          'w-empty': const [],
+        },
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          key: const ValueKey('archive-test-root'),
+          providers: [
+            ChangeNotifierProvider(create: (_) => LanguageProvider()),
+            ChangeNotifierProvider(create: (_) => ThemeProvider()),
+            ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+            ChangeNotifierProvider(
+              create: (_) => TaskProvider(
+                taskService: fakeTasks,
+                weekService: fakeWeeks,
+              ),
+            ),
+            ChangeNotifierProvider(create: (_) => TimerProvider()),
+            ChangeNotifierProvider(create: (_) => MusicProvider()),
+          ],
+          child: MediaQuery(
+            data: const MediaQueryData(size: Size(390, 844)),
+            child: MaterialApp(
+              theme: AppTheme.light(),
+              home: ArchiveScreen(
+                weekService: fakeWeeks,
+                taskService: fakeTasks,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Non-empty week (2026-11-02) is shown; empty week (2026-10-26) is filtered out
+      final filledLabel = WeekUtils.formatWeekRange('2026-11-02', 'kk');
+      final emptyLabel = WeekUtils.formatWeekRange('2026-10-26', 'kk');
+      expect(find.text(filledLabel), findsOneWidget);
+      expect(find.text(emptyLabel), findsNothing);
     },
   );
 }

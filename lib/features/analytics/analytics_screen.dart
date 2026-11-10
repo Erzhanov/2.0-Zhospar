@@ -5,12 +5,16 @@ import 'package:provider/provider.dart';
 import '../../core/i18n/language_provider.dart';
 import '../../core/platform/platform_adaptive.dart';
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/ambient_space_background.dart';
 import '../../shared/widgets/app_card.dart';
 import '../../shared/widgets/mobile_page_container.dart';
 import '../../state/task_provider.dart';
+import '../shell/widgets/top_app_bar.dart';
 
 class AnalyticsScreen extends StatelessWidget {
-  const AnalyticsScreen({super.key});
+  final bool isSubPage;
+
+  const AnalyticsScreen({super.key, this.isSubPage = true});
 
   @override
   Widget build(BuildContext context) {
@@ -71,10 +75,10 @@ class AnalyticsScreen extends StatelessWidget {
       ),
     ];
 
-    return SingleChildScrollView(
+    final content = SingleChildScrollView(
       physics: PlatformAdaptive.scrollPhysics(context),
       child: MobilePageContainer(
-        bottomClearance: 100,
+        bottomClearance: isSubPage ? 36 : 100,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -324,6 +328,19 @@ class AnalyticsScreen extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+
+    if (!isSubPage) return content;
+
+    return AmbientSpaceBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: TopAppBar(
+          title: lang.t('analytics.title'),
+          isSubPage: true,
+        ),
+        body: content,
       ),
     );
   }

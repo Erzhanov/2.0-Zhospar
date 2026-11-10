@@ -20,15 +20,22 @@ import '../dashboard/widgets/task_item_widget.dart';
 import '../shell/widgets/top_app_bar.dart';
 
 class ArchiveScreen extends StatefulWidget {
-  const ArchiveScreen({super.key});
+  const ArchiveScreen({
+    super.key,
+    this.weekService,
+    this.taskService,
+  });
+
+  final WeekService? weekService;
+  final TaskService? taskService;
 
   @override
   State<ArchiveScreen> createState() => _ArchiveScreenState();
 }
 
 class _ArchiveScreenState extends State<ArchiveScreen> {
-  final _weekService = WeekService();
-  final _taskService = TaskService();
+  late final WeekService _weekService;
+  late final TaskService _taskService;
   final _searchController = TextEditingController();
 
   List<WeekModel> _weeks = [];
@@ -41,6 +48,8 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
   @override
   void initState() {
     super.initState();
+    _weekService = widget.weekService ?? WeekService();
+    _taskService = widget.taskService ?? TaskService();
     _loadArchive();
   }
 
@@ -61,12 +70,16 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
               weeks.map((w) => w.id).toList(),
             );
 
+      final nonEmptyWeeks = weeks
+          .where((w) => (tasksMap[w.id] ?? const <TaskModel>[]).isNotEmpty)
+          .toList();
+
       if (!mounted) return;
       setState(() {
-        _weeks = weeks;
+        _weeks = nonEmptyWeeks;
         _tasksByWeek = tasksMap;
-        if (_expandedWeekIds.isEmpty && weeks.isNotEmpty) {
-          _expandedWeekIds.add(weeks.first.id);
+        if (_expandedWeekIds.isEmpty && nonEmptyWeeks.isNotEmpty) {
+          _expandedWeekIds.add(nonEmptyWeeks.first.id);
         }
       });
     } catch (_) {

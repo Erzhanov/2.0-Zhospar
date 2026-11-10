@@ -22,15 +22,15 @@ class AppRoutes {
   static const Set<String> primaryTabRoutes = {
     home,
     week,
-    analytics,
     assistant,
+    settings,
   };
 
   static const Set<String> subPageRoutes = {
     timer,
+    analytics,
     weeklyReview,
     archive,
-    settings,
     admin,
     welcome,
   };
@@ -49,9 +49,9 @@ class AppRoutes {
     switch (routeName) {
       case week:
         return 1;
-      case analytics:
-        return 2;
       case assistant:
+        return 2;
+      case settings:
         return 3;
       case home:
       default:
@@ -119,16 +119,16 @@ class AppNavConfig {
       activeIcon: Icons.calendar_month_rounded,
     ),
     AppNavItem(
-      route: AppRoutes.analytics,
-      labelKey: 'nav.analytics',
-      icon: Icons.bar_chart_outlined,
-      activeIcon: Icons.bar_chart_rounded,
-    ),
-    AppNavItem(
       route: AppRoutes.assistant,
       labelKey: 'nav.assistant',
       icon: Icons.auto_awesome_outlined,
       activeIcon: Icons.auto_awesome,
+    ),
+    AppNavItem(
+      route: AppRoutes.settings,
+      labelKey: 'nav.settings',
+      icon: Icons.settings_outlined,
+      activeIcon: Icons.settings_rounded,
     ),
   ];
 
@@ -139,6 +139,13 @@ class AppNavConfig {
       icon: Icons.timer_outlined,
       activeIcon: Icons.timer_rounded,
       accentColor: Color(0xFF30B0C7),
+    ),
+    AppNavItem(
+      route: AppRoutes.analytics,
+      labelKey: 'nav.analytics',
+      icon: Icons.bar_chart_outlined,
+      activeIcon: Icons.bar_chart_rounded,
+      accentColor: Color(0xFF007AFF),
     ),
     AppNavItem(
       route: AppRoutes.weeklyReview,
@@ -153,13 +160,6 @@ class AppNavConfig {
       icon: Icons.archive_outlined,
       activeIcon: Icons.archive_rounded,
       accentColor: Color(0xFFFF9500),
-    ),
-    AppNavItem(
-      route: AppRoutes.settings,
-      labelKey: 'nav.settings',
-      icon: Icons.settings_outlined,
-      activeIcon: Icons.settings_rounded,
-      accentColor: Color(0xFF007AFF),
     ),
     AppNavItem(
       route: AppRoutes.admin,

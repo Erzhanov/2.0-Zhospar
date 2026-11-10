@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/platform/platform_adaptive.dart';
 import '../../features/admin/admin_screen.dart';
+import '../../features/analytics/analytics_screen.dart';
 import '../../features/archive/archive_screen.dart';
 import '../../features/auth/auth_gate.dart';
 import '../../features/auth/auth_screen.dart';
 import '../../features/landing/landing_screen.dart';
-import '../../features/settings/settings_screen.dart';
 import '../../features/timer/timer_screen.dart';
 import '../../features/weekly_review/weekly_review_screen.dart';
 import '../../shared/widgets/ambient_space_background.dart';
@@ -32,8 +32,8 @@ class AppRouter {
 
       case AppRoutes.home:
       case AppRoutes.week:
-      case AppRoutes.analytics:
       case AppRoutes.assistant:
+      case AppRoutes.settings:
         return _fadeRoute(
           _ProtectedRoute(
             child: AuthGate(
@@ -49,6 +49,12 @@ class AppRouter {
           settings,
         );
 
+      case AppRoutes.analytics:
+        return _adaptiveSubRoute(
+          const _ProtectedRoute(child: AnalyticsScreen()),
+          settings,
+        );
+
       case AppRoutes.weeklyReview:
         return _adaptiveSubRoute(
           const _ProtectedRoute(child: WeeklyReviewScreen()),
@@ -58,12 +64,6 @@ class AppRouter {
       case AppRoutes.archive:
         return _adaptiveSubRoute(
           const _ProtectedRoute(child: ArchiveScreen()),
-          settings,
-        );
-
-      case AppRoutes.settings:
-        return _adaptiveSubRoute(
-          const _ProtectedRoute(child: SettingsScreen()),
           settings,
         );
 
