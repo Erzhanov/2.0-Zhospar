@@ -1,0 +1,21 @@
+
+workflows:
+  ios-workflow:
+    name: Zhospar iOS Build
+    max_build_duration: 120
+
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Get Flutter dependencies
+        script: flutter pub get
+
+      - name: Build iOS
+        script: flutter build ios --release --no-codesign
+
+    artifacts:
+      - build/ios/iphoneos/*.app
+      - /tmp/xcodebuild_logs/*.log
