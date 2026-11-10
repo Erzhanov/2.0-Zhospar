@@ -64,8 +64,8 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
               height: 72,
               decoration: BoxDecoration(
                 color: isDark
-                    ? AppColors.darkPrimary.withOpacity(0.2)
-                    : AppColors.lightPrimary.withOpacity(0.12),
+                    ? AppColors.darkPrimary.withValues(alpha: 0.2)
+                    : AppColors.lightPrimary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,

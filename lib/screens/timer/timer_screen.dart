@@ -177,7 +177,7 @@ class _TimerScreenState extends State<TimerScreen> {
                     child: CircularProgressIndicator(
                       value: progress,
                       strokeWidth: 10,
-                      backgroundColor: isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
+                      backgroundColor: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06),
                       valueColor: AlwaysStoppedAnimation<Color>(modeColor),
                     ),
                   ),
@@ -196,7 +196,7 @@ class _TimerScreenState extends State<TimerScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: modeColor.withOpacity(0.15),
+                          color: modeColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -239,7 +239,7 @@ class _TimerScreenState extends State<TimerScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: modeColor.withOpacity(0.35),
+                            color: modeColor.withValues(alpha: 0.35),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
@@ -326,8 +326,8 @@ class _TimerScreenState extends State<TimerScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
                               color: isCurrent
-                                  ? AppColors.purple.withOpacity(0.15)
-                                  : (isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.03)),
+                                  ? AppColors.purple.withValues(alpha: 0.15)
+                                  : (isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03)),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isCurrent

@@ -49,7 +49,7 @@ class AdminScreen extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: AppColors.destructive.withOpacity(0.15),
+                      color: AppColors.destructive.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.shield_rounded, color: AppColors.destructive, size: 20),

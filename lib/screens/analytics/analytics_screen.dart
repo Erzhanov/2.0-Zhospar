@@ -21,6 +21,13 @@ class AnalyticsScreen extends StatelessWidget {
     final pct = taskProvider.completionPct;
     final streak = taskProvider.streakCount;
 
+    // Calculate category distribution
+    final Map<String, int> categoryCounts = {};
+    for (final t in taskProvider.tasks) {
+      final cat = (t.category != null && t.category!.isNotEmpty) ? t.category! : 'Басқа';
+      categoryCounts[cat] = (categoryCounts[cat] ?? 0) + 1;
+    }
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -74,7 +81,7 @@ class AnalyticsScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
               // ── Weekly Chart ──
               Container(
@@ -152,7 +159,7 @@ class AnalyticsScreen extends StatelessWidget {
                             drawVerticalLine: false,
                             horizontalInterval: 2,
                             getDrawingHorizontalLine: (val) => FlLine(
-                              color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
+                              color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06),
                               strokeWidth: 1,
                             ),
                           ),
@@ -187,6 +194,86 @@ class AnalyticsScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 18),
+
+              // ── Category Breakdown ──
+              if (categoryCounts.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Категориялар бойынша',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 14),
+                      ...categoryCounts.entries.map((entry) {
+                        final cat = entry.key;
+                        final count = entry.value;
+                        final pct = total > 0 ? (count / total) : 0.0;
+                        final style = AppColors.getCategoryStyle(cat, isDark);
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: style['text'] as Color,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        cat,
+                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    '$count (${(pct * 100).round()}%)',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isDark ? Colors.white60 : Colors.black54,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: pct,
+                                  backgroundColor: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+                                  valueColor: AlwaysStoppedAnimation<Color>(style['text'] as Color),
+                                  minHeight: 6,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 60),
             ],
           ),

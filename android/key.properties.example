@@ -1,0 +1,9 @@
+# Instructions for Google Play Store Release Keystore:
+# 1. Run the following command in terminal to generate your upload keystore:
+#    keytool -genkey -v -keystore android/app/zhospar-upload-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias zhospar
+# 2. Copy this file as `android/key.properties` and fill in your passwords:
+#
+# storePassword=your_keystore_password
+# keyPassword=your_key_password
+# keyAlias=zhospar
+# storeFile=zhospar-upload-key.jks

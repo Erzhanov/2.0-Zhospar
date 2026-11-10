@@ -280,7 +280,7 @@ class _WeeklyReviewScreenState extends State<WeeklyReviewScreen> {
             decoration: InputDecoration(
               hintText: hint,
               filled: true,
-              fillColor: isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.03),
+              fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
@@ -302,7 +302,7 @@ class _WeeklyReviewScreenState extends State<WeeklyReviewScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
+            color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06),
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
@@ -319,7 +319,7 @@ class _WeeklyReviewScreenState extends State<WeeklyReviewScreen> {
             decoration: InputDecoration(
               hintText: 'Мақсат жазыңыз...',
               filled: true,
-              fillColor: isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.03),
+              fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(

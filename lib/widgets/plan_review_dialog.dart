@@ -90,7 +90,7 @@ class _PlanReviewDialogState extends State<PlanReviewDialog> {
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.03),
+                            color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -102,7 +102,7 @@ class _PlanReviewDialogState extends State<PlanReviewDialog> {
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkPrimary.withOpacity(0.2) : AppColors.lightPrimary.withOpacity(0.1),
+                                  color: isDark ? AppColors.darkPrimary.withValues(alpha: 0.2) : AppColors.lightPrimary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 alignment: Alignment.center,

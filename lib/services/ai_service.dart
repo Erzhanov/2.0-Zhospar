@@ -59,14 +59,18 @@ class AiService {
     String uiLang = 'kk',
   }) async {
     final url = Uri.parse('${SupabaseConfig.url}/functions/v1/extract-plan');
+    final Map<String, dynamic> body = {
+      'planText': planText,
+      'uiLang': uiLang,
+    };
+    if (userTimeHint != null) {
+      body['userTimeHint'] = userTimeHint;
+    }
+
     final response = await http.post(
       url,
       headers: _getHeaders(),
-      body: jsonEncode({
-        'planText': planText,
-        if (userTimeHint != null) 'userTimeHint': userTimeHint,
-        'uiLang': uiLang,
-      }),
+      body: jsonEncode(body),
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {

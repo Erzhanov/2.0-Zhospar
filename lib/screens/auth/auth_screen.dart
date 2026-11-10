@@ -153,9 +153,9 @@ class _AuthScreenState extends State<AuthScreen> {
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
-                          color: AppColors.destructive.withOpacity(0.12),
+                          color: AppColors.destructive.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.destructive.withOpacity(0.3)),
+                          border: Border.all(color: AppColors.destructive.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
@@ -192,7 +192,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           hintText: 'Аты-жөніңіз',
                           prefixIcon: const Icon(Icons.person_outline, size: 20),
                           filled: true,
-                          fillColor: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.04),
+                          fillColor: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                             borderSide: BorderSide(
@@ -228,7 +228,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         hintText: 'user@example.com',
                         prefixIcon: const Icon(Icons.email_outlined, size: 20),
                         filled: true,
-                        fillColor: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.04),
+                        fillColor: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                           borderSide: BorderSide(
@@ -273,7 +273,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
                         filled: true,
-                        fillColor: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.04),
+                        fillColor: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                           borderSide: BorderSide(
@@ -321,7 +321,9 @@ class _AuthScreenState extends State<AuthScreen> {
                         _errorMessage = null;
                       }),
                       child: Text(
-                        _isLogin ? lang.t('auth.noAccount') + ' ' + lang.t('auth.register') : lang.t('auth.haveAccount') + ' ' + lang.t('auth.login'),
+                        _isLogin
+                            ? '${lang.t('auth.noAccount')} ${lang.t('auth.register')}'
+                            : '${lang.t('auth.haveAccount')} ${lang.t('auth.login')}',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -347,7 +349,7 @@ class _AuthScreenState extends State<AuthScreen> {
         margin: const EdgeInsets.symmetric(horizontal: 2),
         padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
-          color: active ? Colors.black.withOpacity(0.08) : Colors.transparent,
+          color: active ? Colors.black.withValues(alpha: 0.08) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(flag, style: const TextStyle(fontSize: 15)),

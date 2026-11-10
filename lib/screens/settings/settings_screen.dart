@@ -222,7 +222,7 @@ class SettingsScreen extends StatelessWidget {
                   style: const TextStyle(color: AppColors.destructive, fontWeight: FontWeight.bold),
                 ),
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: AppColors.destructive.withOpacity(0.5)),
+                  side: BorderSide(color: AppColors.destructive.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
@@ -260,8 +260,8 @@ class SettingsScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: selected
-                ? (isDark ? AppColors.darkPrimary.withOpacity(0.18) : AppColors.lightPrimary.withOpacity(0.12))
-                : (isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.03)),
+                ? (isDark ? AppColors.darkPrimary.withValues(alpha: 0.18) : AppColors.lightPrimary.withValues(alpha: 0.12))
+                : (isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03)),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: selected
@@ -306,8 +306,8 @@ class SettingsScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: selected
-                ? (isDark ? AppColors.darkPrimary.withOpacity(0.18) : AppColors.lightPrimary.withOpacity(0.12))
-                : (isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.03)),
+                ? (isDark ? AppColors.darkPrimary.withValues(alpha: 0.18) : AppColors.lightPrimary.withValues(alpha: 0.12))
+                : (isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03)),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: selected

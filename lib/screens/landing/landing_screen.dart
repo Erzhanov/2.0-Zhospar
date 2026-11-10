@@ -91,14 +91,14 @@ class LandingScreen extends StatelessWidget {
                     'assets/hero-planner.png',
                     height: 200,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Container(
+                    errorBuilder: (context, error, stackTrace) => Container(
                       height: 180,
                       width: double.infinity,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppColors.lightPrimary.withOpacity(0.8),
-                            AppColors.purple.withOpacity(0.8),
+                            AppColors.lightPrimary.withValues(alpha: 0.8),
+                            AppColors.purple.withValues(alpha: 0.8),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(24),
@@ -175,7 +175,7 @@ class LandingScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      lang.t('auth.login') + ' / ' + lang.t('auth.register'),
+                      '${lang.t('auth.login')} / ${lang.t('auth.register')}',
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(width: 8),
@@ -199,7 +199,7 @@ class LandingScreen extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 2),
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: active ? Colors.black.withOpacity(0.08) : Colors.transparent,
+          color: active ? Colors.black.withValues(alpha: 0.08) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(flag, style: const TextStyle(fontSize: 16)),

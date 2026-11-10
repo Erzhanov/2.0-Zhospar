@@ -173,7 +173,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
                                         width: 44,
                                         height: 44,
                                         decoration: BoxDecoration(
-                                          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.04),
+                                          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04),
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: Center(

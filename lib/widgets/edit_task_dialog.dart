@@ -107,7 +107,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                   decoration: InputDecoration(
                     hintText: lang.t('dlg.taskHint'),
                     filled: true,
-                    fillColor: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.04),
+                    fillColor: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(
@@ -141,7 +141,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                   decoration: InputDecoration(
                     hintText: 'Қосымша мәлімет...',
                     filled: true,
-                    fillColor: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.04),
+                    fillColor: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(
@@ -173,7 +173,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
-                              color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.04),
+                              color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
                                 color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -221,7 +221,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                             decoration: InputDecoration(
                               hintText: '14:00',
                               filled: true,
-                              fillColor: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.04),
+                              fillColor: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
                                 borderSide: BorderSide(
@@ -257,7 +257,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
-                              color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.04),
+                              color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
                                 color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -299,7 +299,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
-                              color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.04),
+                              color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
                                 color: isDark ? AppColors.darkBorder : AppColors.lightBorder,

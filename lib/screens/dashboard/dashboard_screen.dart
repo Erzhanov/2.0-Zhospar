@@ -4,6 +4,7 @@ import '../../core/i18n/language_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/week_utils.dart';
 import '../../providers/task_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/task_item_widget.dart';
 import '../../widgets/add_task_dialog.dart';
 import '../../widgets/edit_task_dialog.dart';
@@ -18,21 +19,109 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final _quoteController = TextEditingController();
   final _reflectionController = TextEditingController();
-  bool _isEditingQuote = false;
+  final _scrollController = ScrollController();
+  String _taskFilter = 'all'; // 'all' | 'todo' | 'done'
 
   @override
   void dispose() {
-    _quoteController.dispose();
     _reflectionController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _showQuoteDialog(BuildContext context, TaskProvider taskProvider, LanguageProvider lang, bool isDark) {
+    final quoteController = TextEditingController(text: taskProvider.currentWeek?.quote ?? '');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : Colors.black12,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Icon(Icons.format_quote_rounded, color: AppColors.purple, size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    lang.t('dashboard.quote'),
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: quoteController,
+                autofocus: true,
+                maxLines: 3,
+                style: const TextStyle(fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: lang.t('dashboard.quoteHint'),
+                  filled: true,
+                  fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.all(14),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () async {
+                  await taskProvider.saveQuote(quoteController.text.trim());
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                child: Text(
+                  lang.t('common.save'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
     final taskProvider = Provider.of<TaskProvider>(context);
+    final auth = Provider.of<AuthProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final weekRange = WeekUtils.formatWeekRange(
@@ -40,43 +129,108 @@ class _DashboardScreenState extends State<DashboardScreen> {
       lang.currentLocale,
     );
 
-    // Sync quote controller
-    if (!_isEditingQuote && taskProvider.currentWeek != null) {
-      _quoteController.text = taskProvider.currentWeek!.quote;
-    }
-
     _reflectionController.text = taskProvider.reflectionText;
 
     final dayShort = lang.getDayShort();
     final dayNames = lang.getDayNames();
-    final selectedDayTasks = taskProvider.selectedDayTasks;
+
+    // Filter tasks based on selected segment
+    var dayTasks = taskProvider.selectedDayTasks;
+    if (_taskFilter == 'todo') {
+      dayTasks = dayTasks.where((t) => !t.isDone).toList();
+    } else if (_taskFilter == 'done') {
+      dayTasks = dayTasks.where((t) => t.isDone).toList();
+    }
+
+    final userEmail = auth.user?.email ?? '';
+    final userName = auth.user?.userMetadata?['display_name'] as String? ??
+        (userEmail.isNotEmpty ? userEmail.split('@').first : 'Дос');
 
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () => taskProvider.loadWeek(taskProvider.weekStartDate),
           child: SingleChildScrollView(
+            controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // ── Top Greeting Bar ──
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Сәлем, $userName 👋',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          weekRange,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? Colors.white60 : Colors.black54,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Text('🔥 ', style: TextStyle(fontSize: 14)),
+                          Text(
+                            '${taskProvider.streakCount} күн',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.warning,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
                 // ── Week Progress Hero ──
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     color: isDark ? AppColors.darkCard : AppColors.lightPrimary,
                     borderRadius: BorderRadius.circular(22),
                     gradient: isDark
                         ? null
                         : const LinearGradient(
-                            colors: [Color(0xFF007AFF), Color(0xFF0051C6)],
+                            colors: [Color(0xFF007AFF), Color(0xFF0056D2)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                     border: Border.all(
                       color: isDark ? AppColors.darkBorder : Colors.transparent,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isDark ? Colors.black : AppColors.lightPrimary).withValues(alpha: 0.25),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,169 +238,94 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.calendar_today_rounded, size: 14, color: Colors.white70),
-                              const SizedBox(width: 6),
-                              Text(
-                                weekRange.toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white70,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.18),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              children: [
-                                const Text('🔥 ', style: TextStyle(fontSize: 12)),
-                                Text(
-                                  '${taskProvider.streakCount} күн',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        lang.t('nav.appName'),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
                           Text(
-                            '${taskProvider.totalCount} ${lang.t('common.tasks')} · ${taskProvider.doneCount} ${lang.t('common.done')} · ${taskProvider.completionPct}%',
+                            lang.t('common.weekProgress').toUpperCase(),
                             style: const TextStyle(
-                              fontSize: 13,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
                               color: Colors.white70,
-                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                          Text(
+                            '${taskProvider.completionPct}%',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 14),
-                      // Progress Bar
+                      const SizedBox(height: 10),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(6),
                         child: LinearProgressIndicator(
                           value: taskProvider.totalCount > 0
                               ? taskProvider.doneCount / taskProvider.totalCount
                               : 0.0,
-                          backgroundColor: Colors.white.withOpacity(0.25),
+                          backgroundColor: Colors.white.withValues(alpha: 0.25),
                           valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                          minHeight: 8,
+                          minHeight: 7,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // ── Weekly Quote Card ──
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                      const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.format_quote_rounded, size: 20, color: AppColors.purple),
-                              const SizedBox(width: 6),
-                              Text(
-                                lang.t('dashboard.quote'),
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                          if (_isEditingQuote)
-                            GestureDetector(
-                              onTap: () async {
-                                await taskProvider.saveQuote(_quoteController.text.trim());
-                                setState(() => _isEditingQuote = false);
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.success,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  lang.t('common.save'),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            )
-                          else
-                            GestureDetector(
-                              onTap: () => setState(() => _isEditingQuote = true),
-                              child: const Icon(Icons.edit_outlined, size: 16),
-                            ),
+                          _heroCounter('Жалпы', '${taskProvider.totalCount}'),
+                          _heroCounter('Орындалды', '${taskProvider.doneCount}'),
+                          _heroCounter('Қалды', '${taskProvider.totalCount - taskProvider.doneCount}'),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      if (_isEditingQuote)
-                        TextField(
-                          controller: _quoteController,
-                          autofocus: true,
-                          maxLines: 2,
-                          style: const TextStyle(fontSize: 13),
-                          decoration: InputDecoration(
-                            hintText: lang.t('dashboard.quoteHint'),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                        )
-                      else
-                        Text(
-                          taskProvider.currentWeek?.quote.isNotEmpty == true
-                              ? '«${taskProvider.currentWeek!.quote}»'
-                              : lang.t('dashboard.quoteHint'),
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontStyle: FontStyle.italic,
-                            color: taskProvider.currentWeek?.quote.isNotEmpty == true
-                                ? (isDark ? Colors.white70 : Colors.black87)
-                                : (isDark ? Colors.white38 : Colors.black38),
-                          ),
-                        ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+
+                // ── Weekly Quote Card ──
+                GestureDetector(
+                  onTap: () => _showQuoteDialog(context, taskProvider, lang, isDark),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.format_quote_rounded, size: 20, color: AppColors.purple),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            taskProvider.currentWeek?.quote.isNotEmpty == true
+                                ? '«${taskProvider.currentWeek!.quote}»'
+                                : lang.t('dashboard.quoteHint'),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontStyle: FontStyle.italic,
+                              color: taskProvider.currentWeek?.quote.isNotEmpty == true
+                                  ? (isDark ? Colors.white : Colors.black87)
+                                  : (isDark ? Colors.white38 : Colors.black38),
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.edit_outlined,
+                          size: 16,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
 
                 // ── Day Selector (Mon..Sun) ──
                 SingleChildScrollView(
@@ -258,8 +337,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       final isToday = WeekUtils.isDayToday(taskProvider.weekStartDate, dayNum);
                       final dayDate = WeekUtils.getDayDate(taskProvider.weekStartDate, dayNum);
 
-                      final dayTasks = taskProvider.tasks.where((t) => t.dayOfWeek == dayNum).toList();
-                      final dayDone = dayTasks.where((t) => t.isDone).length;
+                      final dayTasksList = taskProvider.tasks.where((t) => t.dayOfWeek == dayNum).toList();
+                      final dayDoneCount = dayTasksList.where((t) => t.isDone).length;
 
                       return GestureDetector(
                         onTap: () => taskProvider.selectDay(dayNum),
@@ -277,6 +356,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ? Colors.transparent
                                   : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
                             ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: (isDark ? AppColors.darkPrimary : AppColors.lightPrimary)
+                                          .withValues(alpha: 0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
                           ),
                           child: Column(
                             children: [
@@ -304,26 +393,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               const SizedBox(height: 4),
                               if (isToday)
                                 Container(
-                                  width: 5,
-                                  height: 5,
+                                  width: 6,
+                                  height: 6,
                                   decoration: BoxDecoration(
                                     color: isSelected ? Colors.white : AppColors.destructive,
                                     shape: BoxShape.circle,
                                   ),
                                 )
-                              else if (dayTasks.isNotEmpty)
+                              else if (dayTasksList.isNotEmpty)
                                 Text(
-                                  '$dayDone/${dayTasks.length}',
+                                  '$dayDoneCount/${dayTasksList.length}',
                                   style: TextStyle(
                                     fontSize: 9,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w700,
                                     color: isSelected
                                         ? Colors.white70
                                         : (isDark ? Colors.white38 : Colors.black38),
                                   ),
                                 )
                               else
-                                const SizedBox(height: 5),
+                                const SizedBox(height: 6),
                             ],
                           ),
                         ),
@@ -331,36 +420,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     }),
                   ),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
 
-                // ── Day Header & Add Button ──
+                // ── Day Header & Segmented Filter Bar ──
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '${dayNames[taskProvider.selectedDay - 1]} (${selectedDayTasks.length})',
+                      '${dayNames[taskProvider.selectedDay - 1]} (${dayTasks.length})',
                       style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
                     ),
-                    TextButton.icon(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) => AddTaskDialog(defaultDay: taskProvider.selectedDay),
-                        );
-                      },
-                      icon: const Icon(Icons.add, size: 16),
-                      label: Text(lang.t('common.add')),
-                      style: TextButton.styleFrom(
-                        foregroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                      ),
+                    // Filter Pills
+                    Row(
+                      children: [
+                        _filterPill('all', lang.t('common.all'), isDark),
+                        const SizedBox(width: 4),
+                        _filterPill('todo', 'Қалған', isDark),
+                        const SizedBox(width: 4),
+                        _filterPill('done', 'Дайын', isDark),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
 
                 // ── Tasks List ──
-                if (selectedDayTasks.isEmpty)
+                if (dayTasks.isEmpty)
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
                     decoration: BoxDecoration(
@@ -387,23 +472,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        OutlinedButton(
+                        OutlinedButton.icon(
                           onPressed: () {
                             showDialog(
                               context: context,
                               builder: (_) => AddTaskDialog(defaultDay: taskProvider.selectedDay),
                             );
                           },
+                          icon: const Icon(Icons.add, size: 16),
+                          label: Text(lang.t('common.addTask')),
                           style: OutlinedButton.styleFrom(
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: Text(lang.t('common.addTask')),
                         ),
                       ],
                     ),
                   )
                 else
-                  ...selectedDayTasks.map((task) {
+                  ...dayTasks.map((task) {
                     return TaskItemWidget(
                       task: task,
                       onEdit: () {
@@ -414,7 +500,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       },
                     );
                   }),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
                 // ── Daily Reflection Card ──
                 Container(
@@ -450,6 +536,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   const SnackBar(
                                     content: Text('Рефлексия сақталды!'),
                                     duration: Duration(seconds: 1),
+                                    backgroundColor: AppColors.success,
                                   ),
                                 );
                               }
@@ -475,12 +562,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: 10),
                       TextField(
                         controller: _reflectionController,
-                        maxLines: 3,
+                        maxLines: 2,
                         style: const TextStyle(fontSize: 13),
                         decoration: InputDecoration(
                           hintText: lang.t('dashboard.reflectionHint'),
                           filled: true,
-                          fillColor: isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.03),
+                          fillColor: isDark
+                              ? Colors.white.withValues(alpha: 0.04)
+                              : Colors.black.withValues(alpha: 0.03),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
@@ -493,21 +582,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
                 // ── Quick Actions Grid ──
                 Text(
                   lang.t('dashboard.quickActions'),
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: 3,
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
-                  childAspectRatio: 1.1,
+                  childAspectRatio: 1.15,
                   children: [
                     _quickActionTile(
                       icon: Icons.calendar_month_rounded,
@@ -532,7 +621,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 60),
+                const SizedBox(height: 70),
               ],
             ),
           ),
@@ -548,6 +637,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
         backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _heroCounter(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            color: Colors.white70,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _filterPill(String id, String label, bool isDark) {
+    final active = _taskFilter == id;
+    return GestureDetector(
+      onTap: () => setState(() => _taskFilter = id),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        decoration: BoxDecoration(
+          color: active
+              ? (isDark ? AppColors.darkPrimary : AppColors.lightPrimary)
+              : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.04)),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: active ? FontWeight.bold : FontWeight.w500,
+            color: active
+                ? Colors.white
+                : (isDark ? Colors.white70 : Colors.black87),
+          ),
+        ),
       ),
     );
   }
@@ -576,12 +715,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               label,
               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
