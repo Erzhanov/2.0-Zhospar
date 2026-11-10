@@ -1,29 +1,33 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTheme {
+  static ThemeData? _cachedLight;
+  static ThemeData? _cachedDark;
+
   static ThemeData light() {
-    return _buildTheme(
+    return _cachedLight ??= _buildTheme(
       base: ThemeData.light(useMaterial3: true),
       brightness: Brightness.light,
       scaffoldBg: Colors.transparent,
       primary: AppColors.lightPrimary,
       surface: Colors.white,
       foreground: AppColors.lightForeground,
-      border: const Color(0x330F172A),
+      border: AppColors.lightBorder,
     );
   }
 
   static ThemeData dark() {
-    return _buildTheme(
+    return _cachedDark ??= _buildTheme(
       base: ThemeData.dark(useMaterial3: true),
       brightness: Brightness.dark,
       scaffoldBg: Colors.transparent,
       primary: AppColors.darkPrimary,
-      surface: const Color(0xFF11182B),
+      surface: const Color(0xFF1C1C1E),
       foreground: AppColors.darkForeground,
-      border: const Color(0x24FFFFFF),
+      border: AppColors.darkBorder,
     );
   }
 
@@ -47,6 +51,13 @@ class AppTheme {
 
     return base.copyWith(
       scaffoldBackgroundColor: scaffoldBg,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+        },
+      ),
       colorScheme: ColorScheme(
         brightness: brightness,
         primary: primary,
@@ -143,7 +154,8 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: isDark ? const Color(0xEB121A2E) : const Color(0xF5FFFFFF),
+        backgroundColor:
+            isDark ? const Color(0xEB1C1C1E) : const Color(0xF5FFFFFF),
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(26),
