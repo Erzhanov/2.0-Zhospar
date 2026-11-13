@@ -11,6 +11,7 @@ import '../../shared/widgets/glass_surface.dart';
 import '../../shared/widgets/mobile_page_container.dart';
 import '../../shared/widgets/tap_scale.dart';
 import '../../state/auth_provider.dart';
+import '../../state/gamification_provider.dart';
 import '../../state/task_provider.dart';
 import 'widgets/day_selector_bar.dart';
 import 'widgets/task_form_sheet.dart';
@@ -235,31 +236,68 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  GlassSurface(
-                    borderRadius: 16,
-                    glowColor: AppColors.warning,
-                    elevation: 0.7,
-                    tintColor: AppColors.warning.withValues(alpha: 0.14),
-                    borderColor: AppColors.warning.withValues(alpha: 0.35),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('🔥', style: TextStyle(fontSize: 14)),
-                        const SizedBox(width: 5),
-                        Text(
-                          '${taskProvider.streakCount} ${lang.t('common.streakDays')}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.warning,
-                          ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GlassSurface(
+                        borderRadius: 14,
+                        glowColor: AppColors.warning,
+                        elevation: 0.7,
+                        tintColor: AppColors.warning.withValues(alpha: 0.14),
+                        borderColor: AppColors.warning.withValues(alpha: 0.35),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
                         ),
-                      ],
-                    ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('🔥', style: TextStyle(fontSize: 12)),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${taskProvider.streakCount} ${lang.t('common.streakDays')}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.warning,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Consumer<GamificationProvider>(
+                        builder: (context, gamification, _) {
+                          return GlassSurface(
+                            borderRadius: 14,
+                            glowColor: AppColors.glowIndigo,
+                            elevation: 0.7,
+                            tintColor: AppColors.glowIndigo.withValues(alpha: 0.14),
+                            borderColor: AppColors.glowIndigo.withValues(alpha: 0.35),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 9,
+                              vertical: 5,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('⚡', style: TextStyle(fontSize: 11)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${gamification.level} lvl • ${gamification.xp} XP',
+                                  style: const TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.glowIndigo,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),

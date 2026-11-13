@@ -3,4 +3,10 @@
     <color name="ic_launcher_background">#FFFFFF</color>
     <color name="splash_bg_light">#F2F2F7</color>
     <color name="splash_bg_dark">#000000</color>
+    <color name="widget_bg_dark">#1C1C1E</color>
+    <color name="widget_card_bg">#2C2C2E</color>
+    <color name="widget_primary">#007AFF</color>
+    <color name="widget_text_secondary">#8E8E93</color>
+    <color name="widget_accent_orange">#FF9500</color>
+    <color name="widget_success">#34C759</color>
 </resources>

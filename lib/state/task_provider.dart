@@ -4,6 +4,7 @@ import '../data/models/task.dart';
 import '../data/models/week.dart';
 import '../data/services/task_service.dart';
 import '../data/services/week_service.dart';
+import '../data/services/widget_data_service.dart';
 
 class TaskProvider extends ChangeNotifier {
   final TaskService _taskService;
@@ -17,6 +18,11 @@ class TaskProvider extends ChangeNotifier {
   bool _isLoading = false;
   int _streakCount = 0;
   String? _activeUserId;
+  bool _isOffline = false;
+
+  // Callbacks for Gamification & Celebration
+  void Function(TaskModel task, bool isNowDone, bool allDayTasksDone)? onTaskToggled;
+  void Function()? onReflectionSaved;
 
   String get weekStartDate => _weekStartDate;
   WeekModel? get currentWeek => _currentWeek;
@@ -25,6 +31,7 @@ class TaskProvider extends ChangeNotifier {
   String get reflectionText => _reflectionText;
   bool get isLoading => _isLoading;
   int get streakCount => _streakCount;
+  bool get isOffline => _isOffline;
 
   List<TaskModel> get selectedDayTasks =>
       _tasks.where((t) => t.dayOfWeek == _selectedDay).toList();
@@ -80,23 +87,44 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Sync any offline queued mutations if connected
+      await _taskService.syncPendingQueue();
+
       final week = await _weekService.getOrCreateWeek(wsd);
       _currentWeek = week;
+      _isOffline = false;
 
       if (week != null) {
         _tasks = await _taskService.getTasksForWeek(week.id);
         await _loadReflectionForSelectedDay(notify: false);
         await _calculateStreak();
+        _syncWidgetData();
       } else {
         _tasks = [];
         _reflectionText = '';
       }
     } catch (_) {
-      // Preserve current state cleanly on transient errors
+      // Preserve current state and mark offline mode
+      _isOffline = true;
+      if (_currentWeek != null) {
+        _tasks = await _taskService.getTasksForWeek(_currentWeek!.id);
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void _syncWidgetData() {
+    try {
+      final todayDate = WeekUtils.getDayDate(_weekStartDate, _selectedDay);
+      final formatted = '${todayDate.day}.${todayDate.month}';
+      WidgetDataService.syncWidgetData(
+        dateFormatted: formatted,
+        todayTasks: selectedDayTasks,
+        streak: _streakCount,
+      );
+    } catch (_) {}
   }
 
   Future<void> _loadReflectionForSelectedDay({bool notify = true}) async {
@@ -163,15 +191,23 @@ class TaskProvider extends ChangeNotifier {
 
     final currentStatus = _tasks[idx].status;
     final newStatus = currentStatus == 'done' ? 'todo' : 'done';
+    final updatedTask = _tasks[idx].copyWith(status: newStatus);
 
-    _tasks[idx] = _tasks[idx].copyWith(status: newStatus);
+    _tasks[idx] = updatedTask;
     notifyListeners();
+
+    // Check if all today's tasks are completed
+    final dayTasks = selectedDayTasks;
+    final allDayDone = dayTasks.isNotEmpty && dayTasks.every((t) => t.isDone);
+
+    // Notify Gamification
+    onTaskToggled?.call(updatedTask, newStatus == 'done', allDayDone);
+    _syncWidgetData();
 
     try {
       await _taskService.updateTask(taskId, {'status': newStatus});
     } catch (_) {
-      _tasks[idx] = _tasks[idx].copyWith(status: currentStatus);
-      notifyListeners();
+      // Local optimistic update is preserved in cache
     }
   }
 
@@ -198,6 +234,7 @@ class TaskProvider extends ChangeNotifier {
     if (newTask != null) {
       _tasks.add(newTask);
       notifyListeners();
+      _syncWidgetData();
     }
   }
 
@@ -208,6 +245,7 @@ class TaskProvider extends ChangeNotifier {
       if (_currentWeek != null) {
         _tasks = await _taskService.getTasksForWeek(_currentWeek!.id);
         notifyListeners();
+        _syncWidgetData();
       }
     }
   }
@@ -215,6 +253,7 @@ class TaskProvider extends ChangeNotifier {
   Future<void> deleteTask(String id) async {
     _tasks.removeWhere((t) => t.id == id);
     notifyListeners();
+    _syncWidgetData();
     await _taskService.deleteTask(id);
   }
 
@@ -240,6 +279,7 @@ class TaskProvider extends ChangeNotifier {
     if (_currentWeek == null) return;
     _reflectionText = text;
     notifyListeners();
+    onReflectionSaved?.call();
     await _weekService.saveReflection(_currentWeek!.id, _selectedDay, text);
   }
 

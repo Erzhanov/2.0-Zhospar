@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 import '../core/i18n/language_provider.dart';
 import '../core/platform/platform_adaptive.dart';
 import '../core/theme/app_theme.dart';
+import '../data/services/reminder_service.dart';
 import '../state/ai_chat_provider.dart';
 import '../state/auth_provider.dart';
+import '../state/gamification_provider.dart';
 import '../state/music_provider.dart';
 import '../state/task_provider.dart';
 import '../state/theme_provider.dart';
@@ -24,6 +26,8 @@ class ZhosparRoot extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => GamificationProvider()),
+        ChangeNotifierProvider(create: (_) => ReminderService()),
         ChangeNotifierProxyProvider<AuthProvider, TaskProvider>(
           create: (_) => TaskProvider(),
           update: (_, auth, task) => task!..syncAuthUser(auth.user?.id),

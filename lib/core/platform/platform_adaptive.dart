@@ -72,6 +72,11 @@ class PlatformAdaptive {
     if (!hapticsNotifier.value) return;
     HapticFeedback.heavyImpact();
   }
+
+  static void hapticSuccess() {
+    if (!hapticsNotifier.value) return;
+    HapticFeedback.mediumImpact();
+  }
 }
 
 /// Platform-aware scroll behavior applying Cupertino bounce on iOS/macOS

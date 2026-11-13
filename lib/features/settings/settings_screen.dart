@@ -4,6 +4,7 @@ import '../../app/router/app_routes.dart';
 import '../../core/i18n/language_provider.dart';
 import '../../core/platform/platform_adaptive.dart';
 import '../../core/theme/app_colors.dart';
+import '../../data/services/reminder_service.dart';
 import '../../shared/widgets/ambient_space_background.dart';
 import '../../shared/widgets/app_card.dart';
 import '../../shared/widgets/brand_logo.dart';
@@ -12,9 +13,14 @@ import '../../shared/widgets/glass_surface.dart';
 import '../../shared/widgets/mobile_page_container.dart';
 import '../../shared/widgets/tap_scale.dart';
 import '../../state/auth_provider.dart';
+import '../../state/gamification_provider.dart';
+import '../../state/task_provider.dart';
 import '../../state/theme_provider.dart';
 import '../shell/widgets/top_app_bar.dart';
+import 'widgets/achievements_card.dart';
+import 'widgets/home_widget_preview_card.dart';
 import 'widgets/onboarding_dialog.dart';
+import 'widgets/reminders_card.dart';
 
 class SettingsScreen extends StatelessWidget {
   final bool embedded;
@@ -76,6 +82,9 @@ class SettingsScreen extends StatelessWidget {
     final lang = Provider.of<LanguageProvider>(context);
     final theme = Provider.of<ThemeProvider>(context);
     final auth = Provider.of<AuthProvider>(context);
+    final gamification = Provider.of<GamificationProvider>(context);
+    final reminderService = Provider.of<ReminderService>(context);
+    final taskProvider = Provider.of<TaskProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary =
         isDark ? AppColors.darkPrimaryBright : AppColors.lightPrimary;
@@ -455,6 +464,33 @@ class SettingsScreen extends StatelessWidget {
                         );
                       },
                     ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Gamification & Achievements
+                SpringPopIn(
+                  child: AchievementsCard(
+                    lang: lang,
+                    gamification: gamification,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Reminders & Notifications
+                SpringPopIn(
+                  child: RemindersCard(
+                    lang: lang,
+                    reminderService: reminderService,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Home Screen Widgets Preview (iOS & Android)
+                SpringPopIn(
+                  child: HomeWidgetPreviewCard(
+                    lang: lang,
+                    taskProvider: taskProvider,
                   ),
                 ),
                 const SizedBox(height: 16),

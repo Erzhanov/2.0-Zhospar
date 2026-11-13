@@ -5,10 +5,12 @@ import '../../core/i18n/language_provider.dart';
 import '../../core/platform/platform_adaptive.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/ambient_space_background.dart';
+import '../../shared/widgets/confetti_celebration.dart';
 import '../../shared/widgets/floating_motion.dart';
 import '../../shared/widgets/floating_music_player.dart';
 import '../../shared/widgets/tap_scale.dart';
 import '../../state/auth_provider.dart';
+import '../../state/gamification_provider.dart';
 import '../../state/music_provider.dart';
 import '../../state/task_provider.dart';
 import '../../state/timer_provider.dart';
@@ -86,7 +88,19 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
     final auth = Provider.of<AuthProvider>(context);
-    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    final taskProvider = Provider.of<TaskProvider>(context);
+    final gamification = Provider.of<GamificationProvider>(context);
+    final celebration = gamification.currentCelebration;
+
+    taskProvider.onTaskToggled = (task, isNowDone, allDayTasksDone) {
+      gamification.onTaskToggled(
+        task: task,
+        isNowDone: isNowDone,
+        allDayTasksDone: allDayTasksDone,
+      );
+    };
+    taskProvider.onReflectionSaved = gamification.onReflectionSaved;
+
     final hasTimerRunning = context.select<TimerProvider, bool>(
       (t) => t.isRunning,
     );
@@ -164,6 +178,39 @@ class _AppShellState extends State<AppShell> {
               FloatingMusicPlayer(
                 bottomOffset: showAddTaskFab ? 82 : 16,
               ),
+              if (taskProvider.isOffline)
+                Positioned(
+                  top: MediaQuery.paddingOf(context).top + 8,
+                  left: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.cloud_off_rounded, size: 14, color: AppColors.warning),
+                        const SizedBox(width: 6),
+                        Text(
+                          lang.t('offline.title'),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (celebration != null)
+                ConfettiCelebrationOverlay(
+                  event: celebration,
+                  onDismiss: gamification.clearCelebration,
+                ),
             ],
           ),
           floatingActionButton: (showAddTaskFab && !keyboardOpen)

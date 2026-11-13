@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +20,8 @@ import 'package:zhospar_app/data/models/weekly_review.dart';
 import 'package:zhospar_app/data/services/auth_service.dart';
 import 'package:zhospar_app/data/services/task_service.dart';
 import 'package:zhospar_app/data/services/week_service.dart';
+import 'package:zhospar_app/data/services/reminder_service.dart';
+import 'package:zhospar_app/data/services/widget_data_service.dart';
 import 'package:zhospar_app/features/analytics/analytics_screen.dart';
 import 'package:zhospar_app/features/archive/archive_screen.dart';
 import 'package:zhospar_app/features/auth/auth_screen.dart';
@@ -36,6 +39,7 @@ import 'package:zhospar_app/features/timer/timer_screen.dart';
 import 'package:zhospar_app/shared/widgets/floating_motion.dart';
 import 'package:zhospar_app/state/ai_chat_provider.dart';
 import 'package:zhospar_app/state/auth_provider.dart';
+import 'package:zhospar_app/state/gamification_provider.dart';
 import 'package:zhospar_app/state/music_provider.dart';
 import 'package:zhospar_app/state/task_provider.dart';
 import 'package:zhospar_app/state/theme_provider.dart';
@@ -215,6 +219,9 @@ class _FakeTaskService implements TaskService {
   }
 
   @override
+  Future<void> syncPendingQueue() async {}
+
+  @override
   Future<int> copyIncompleteTasks(
     String currentWeekId,
     String currentWeekStartDate,
@@ -313,6 +320,8 @@ Widget _buildTestApp({
       ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ChangeNotifierProvider<ThemeProvider>.value(value: thProvider),
       ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+      ChangeNotifierProvider(create: (_) => GamificationProvider()),
+      ChangeNotifierProvider(create: (_) => ReminderService()),
       ChangeNotifierProxyProvider<AuthProvider, TaskProvider>(
         create: (_) => tProvider,
         update: (_, auth, prev) {
@@ -355,6 +364,11 @@ void main() {
   });
 
   setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+      const MethodChannel('com.zhospar.zhospar_app/widget'),
+      (call) async => null,
+    );
     SharedPreferences.setMockInitialValues({});
     PlatformAdaptive.hapticsNotifier.value = true;
   });
@@ -1396,6 +1410,118 @@ void main() {
       final emptyLabel = WeekUtils.formatWeekRange('2026-10-26', 'kk');
       expect(find.text(filledLabel), findsOneWidget);
       expect(find.text(emptyLabel), findsNothing);
+    },
+  );
+
+  test('GamificationProvider awards XP, calculates level and streak badges on task completion', () async {
+    final gamification = GamificationProvider();
+    expect(gamification.level, 1);
+    expect(gamification.xp, 0);
+
+    final task = TaskModel(
+      id: 'task-gamify-1',
+      weekId: 'w1',
+      userId: 'user-123',
+      dayOfWeek: 1,
+      title: 'Complete important feature',
+      priority: 'high',
+    );
+
+    // Toggle task done -> +40 XP for high priority + first_step badge
+    await gamification.onTaskToggled(
+      task: task,
+      isNowDone: true,
+      allDayTasksDone: false,
+    );
+
+    expect(gamification.xp, 40);
+    expect(gamification.totalTasksDone, 1);
+    expect(gamification.unlockedBadgeIds.contains('first_step'), isTrue);
+    expect(gamification.currentCelebration, isNotNull);
+
+    // Complete all daily tasks -> bonus XP and level up!
+    await gamification.onTaskToggled(
+      task: task,
+      isNowDone: true,
+      allDayTasksDone: true,
+    );
+
+    expect(gamification.xp, greaterThanOrEqualTo(100));
+    expect(gamification.level, greaterThanOrEqualTo(2));
+    expect(gamification.unlockedBadgeIds.contains('daily_clear'), isTrue);
+
+    // Test streak badges
+    await gamification.checkStreakBadges(7);
+    expect(gamification.unlockedBadgeIds.contains('streak_3'), isTrue);
+    expect(gamification.unlockedBadgeIds.contains('streak_7'), isTrue);
+  });
+
+  testWidgets(
+    'WidgetDataService synchronizes today snapshot and Settings renders Achievements and Reminders cards',
+    (tester) async {
+      final user = User(
+        id: 'user-123',
+        appMetadata: const {},
+        userMetadata: const {'display_name': 'Ayan'},
+        aud: 'authenticated',
+        createdAt: '2026-01-01T00:00:00Z',
+        email: 'ayan@example.com',
+      );
+      final session = Session(
+        accessToken: 'token-abc',
+        tokenType: 'bearer',
+        user: user,
+      );
+      final authProvider = AuthProvider(
+        authService: _FakeAuthService(initialSession: session),
+      );
+
+      // Verify WidgetDataService snapshot serialization
+      await WidgetDataService.syncWidgetData(
+        dateFormatted: '13.11',
+        todayTasks: [
+          TaskModel(
+            id: 't-w-1',
+            weekId: 'w1',
+            userId: 'user-123',
+            dayOfWeek: 1,
+            title: 'Test Widget Task',
+            dueTime: '14:00',
+            status: 'done',
+          ),
+          TaskModel(
+            id: 't-w-2',
+            weekId: 'w1',
+            userId: 'user-123',
+            dayOfWeek: 1,
+            title: 'Second Task',
+            status: 'todo',
+          ),
+        ],
+        streak: 5,
+      );
+
+      final snapshot = await WidgetDataService.getWidgetSnapshot();
+      expect(snapshot['date'], '13.11');
+      expect(snapshot['streak'], 5);
+      expect(snapshot['total'], 2);
+      expect(snapshot['done'], 1);
+      expect(snapshot['pct'], 50);
+
+      // Open Settings and verify Achievements and Reminders cards are visible
+      await tester.pumpWidget(
+        _buildTestApp(
+          authProvider: authProvider,
+          viewport: const Size(390, 844),
+          initialRoute: AppRoutes.settings,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SettingsScreen), findsOneWidget);
+      expect(find.text('Жетістіктер мен Деңгей'), findsOneWidget);
+      expect(find.text('Еске салулар'), findsOneWidget);
+      expect(find.text('Экран виджеттері'), findsOneWidget);
     },
   );
 }
