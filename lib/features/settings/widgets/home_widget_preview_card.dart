@@ -53,6 +53,145 @@ class _HomeWidgetPreviewCardState extends State<HomeWidgetPreviewCard> {
     }
   }
 
+  Future<void> _addToHomeScreen() async {
+    PlatformAdaptive.hapticMedium();
+    final size = _isMedium ? 'medium' : 'small';
+    final pinned = await WidgetDataService.requestPinWidget(size: size);
+    if (pinned && mounted) {
+      PlatformAdaptive.hapticSuccess();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text(widget.lang.t('widgets.pinSent')),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else if (mounted) {
+      _showGuideDialog();
+    }
+  }
+
+  void _showGuideDialog() {
+    PlatformAdaptive.hapticLight();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.teal.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.widgets_rounded, color: AppColors.teal, size: 20),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                widget.lang.t('widgets.guideTitle'),
+                style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // iOS Guide card
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? Colors.white12 : Colors.black12,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.apple, size: 18),
+                      SizedBox(width: 6),
+                      Text(
+                        'iOS (iPhone / iPad)',
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.lang.t('widgets.guideIos'),
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.35,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Android Guide card
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? Colors.white12 : Colors.black12,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.android, size: 18, color: Colors.green),
+                      SizedBox(width: 6),
+                      Text(
+                        'Android',
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.lang.t('widgets.guideAndroid'),
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.35,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            style: FilledButton.styleFrom(
+              backgroundColor: primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            child: Text(widget.lang.t('common.done')),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -175,41 +314,88 @@ class _HomeWidgetPreviewCardState extends State<HomeWidgetPreviewCard> {
           ),
           const SizedBox(height: 14),
 
-          // Sync Action
-          TapScale(
-            onTap: _isSyncing ? null : _sync,
-            borderRadius: BorderRadius.circular(16),
-            child: GlassSurface(
-              borderRadius: 16,
-              elevation: 0.6,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
+          // Actions Row: Primary "Add to Home Screen", Quick Sync, and Guide Help
+          Row(
+            children: [
+              Expanded(
+                child: TapScale(
+                  onTap: _addToHomeScreen,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          primary,
+                          primary.withValues(alpha: 0.85),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primary.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.add_to_home_screen_rounded,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            widget.lang.t('widgets.addToHomeScreen'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              TapScale(
+                onTap: _isSyncing ? null : _sync,
+                borderRadius: BorderRadius.circular(16),
+                child: GlassSurface(
+                  borderRadius: 16,
+                  elevation: 0.6,
+                  padding: const EdgeInsets.all(12),
+                  child: Icon(
                     _isSyncing ? Icons.sync : Icons.refresh_rounded,
                     size: 18,
                     color: primary,
                   ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      _isSyncing
-                          ? widget.lang.t('offline.syncing')
-                          : widget.lang.t('widgets.syncNow'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: primary,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              TapScale(
+                onTap: _showGuideDialog,
+                borderRadius: BorderRadius.circular(16),
+                child: GlassSurface(
+                  borderRadius: 16,
+                  elevation: 0.6,
+                  padding: const EdgeInsets.all(12),
+                  child: Icon(
+                    Icons.help_outline_rounded,
+                    size: 18,
+                    color: primary,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

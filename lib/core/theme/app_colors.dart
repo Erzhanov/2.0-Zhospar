@@ -25,6 +25,7 @@ class AppColors {
 
   // Ambient Accents
   static const Color glowTeal = Color(0xFF30B0C7);
+  static const Color glowCyan = Color(0xFF5AC8FA);
   static const Color glowIndigo = Color(0xFF5856D6);
   static const Color glowAmber = Color(0xFFFF9500);
 

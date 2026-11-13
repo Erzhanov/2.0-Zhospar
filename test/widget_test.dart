@@ -44,6 +44,8 @@ import 'package:zhospar_app/state/music_provider.dart';
 import 'package:zhospar_app/state/task_provider.dart';
 import 'package:zhospar_app/state/theme_provider.dart';
 import 'package:zhospar_app/state/timer_provider.dart';
+import 'package:zhospar_app/state/winter_theme_provider.dart';
+import 'package:zhospar_app/shared/widgets/santa_hat.dart';
 
 class _FakeAuthService implements AuthService {
   final _controller = StreamController<AuthState>.broadcast();
@@ -340,6 +342,7 @@ Widget _buildTestApp({
       ),
       ChangeNotifierProvider<TimerProvider>.value(value: tmProvider),
       ChangeNotifierProvider(create: (_) => MusicProvider()),
+      ChangeNotifierProvider(create: (_) => WinterThemeProvider()),
     ],
     child: Builder(
       builder: (context) => MediaQuery(
@@ -1522,6 +1525,59 @@ void main() {
       expect(find.text('Жетістіктер мен Деңгей'), findsOneWidget);
       expect(find.text('Еске салулар'), findsOneWidget);
       expect(find.text('Экран виджеттері'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'WinterThemeProvider manages snowfall toggle, Santa hat renders on greeting, and Settings displays winter card',
+    (tester) async {
+      final user = User(
+        id: 'user-123',
+        appMetadata: const {},
+        userMetadata: const {'display_name': 'Ayan'},
+        aud: 'authenticated',
+        createdAt: '2026-01-01T00:00:00Z',
+        email: 'ayan@example.com',
+      );
+      final session = Session(
+        accessToken: 'token-abc',
+        tokenType: 'bearer',
+        user: user,
+      );
+      final authProvider = AuthProvider(
+        authService: _FakeAuthService(initialSession: session),
+      );
+
+      // Verify SantaHat is rendered on Home Dashboard
+      await tester.pumpWidget(
+        _buildTestApp(
+          authProvider: authProvider,
+          viewport: const Size(390, 844),
+          initialRoute: AppRoutes.home,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SantaHat), findsOneWidget);
+
+      // Test winter provider state toggle & tilt
+      final winter = WinterThemeProvider();
+      expect(winter.isWinterEnabled, isTrue);
+      winter.setTilt(0.75);
+      expect(winter.tiltX, 0.75);
+      winter.setTilt(-0.75);
+      expect(winter.tiltX, -0.75);
+
+      await winter.toggleWinter(false);
+      expect(winter.isWinterEnabled, isFalse);
+
+      // Switch to Settings tab and verify WinterCard is present
+      final settingsTab = find.byIcon(Icons.settings_outlined);
+      await tester.tap(settingsTab);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SettingsScreen), findsOneWidget);
+      expect(find.text('Қысқы көңіл-күй'), findsOneWidget);
     },
   );
 }

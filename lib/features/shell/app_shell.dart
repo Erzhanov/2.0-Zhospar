@@ -9,6 +9,7 @@ import '../../shared/widgets/confetti_celebration.dart';
 import '../../shared/widgets/floating_motion.dart';
 import '../../shared/widgets/floating_music_player.dart';
 import '../../shared/widgets/tap_scale.dart';
+import '../../shared/widgets/winter_snow_overlay.dart';
 import '../../state/auth_provider.dart';
 import '../../state/gamification_provider.dart';
 import '../../state/music_provider.dart';
@@ -137,7 +138,8 @@ class _AppShellState extends State<AppShell> {
         }
       },
       child: AmbientSpaceBackground(
-        child: Scaffold(
+        child: WinterSnowOverlay(
+          child: Scaffold(
           backgroundColor: Colors.transparent,
           extendBody: true,
           body: Stack(
@@ -273,6 +275,7 @@ class _AppShellState extends State<AppShell> {
                   onTabSelected: _selectTab,
                   onMoreTapped: _openMoreSheet,
                 ),
+          ),
         ),
       ),
     );

@@ -255,6 +255,16 @@ class AppStrings {
       'widgets.medium': 'Орташа (4x2)',
       'widgets.syncNow': 'Виджет дерегін жаңарту',
       'widgets.syncSuccess': 'Виджет деректері жаңартылды!',
+      'widgets.addToHomeScreen': 'Басты экранға қосу',
+      'widgets.howToAdd': 'Қалай қосуға болады?',
+      'widgets.guideTitle': 'Басты экранға виджет қосу',
+      'widgets.guideIos': 'iOS (iPhone): Негізгі экранның бос жерін ұзақ басып, жоғарғы сол жақтағы «+» батырмасын басыңыз және ZHOSPAR-ды таңдаңыз.',
+      'widgets.guideAndroid': 'Android: Негізгі экранның бос жерін ұзақ басып, «Виджеттер» мәзірін ашыңыз және ZHOSPAR виджетін экранға сүйреңіз.',
+      'widgets.pinSent': 'Басты экранға қосу сұранысы жіберілді!',
+
+      // winter
+      'winter.title': 'Қысқы көңіл-күй',
+      'winter.desc': 'Мерекелік қар жаууы және басты беттегі Аяз ата қалпағы',
     },
     'ru': {
       // nav
@@ -511,6 +521,16 @@ class AppStrings {
       'widgets.medium': 'Средний (4x2)',
       'widgets.syncNow': 'Обновить данные виджета',
       'widgets.syncSuccess': 'Данные виджета обновлены!',
+      'widgets.addToHomeScreen': 'Добавить на главный экран',
+      'widgets.howToAdd': 'Как добавить?',
+      'widgets.guideTitle': 'Добавление виджета на экран',
+      'widgets.guideIos': 'iOS (iPhone): Зажмите свободное место на главном экране, нажмите «+» в верхнем углу и выберите ZHOSPAR.',
+      'widgets.guideAndroid': 'Android: Удерживайте палец на главном экране, выберите меню «Виджеты» и перетащите ZHOSPAR на экран.',
+      'widgets.pinSent': 'Запрос на добавление отправлен!',
+
+      // winter
+      'winter.title': 'Зимняя атмосфера',
+      'winter.desc': 'Праздничный снегопад и новогодняя шапочка на приветствии',
     },
     'en': {
       // nav
@@ -767,6 +787,16 @@ class AppStrings {
       'widgets.medium': 'Medium (4x2)',
       'widgets.syncNow': 'Sync Widget Data',
       'widgets.syncSuccess': 'Widget data updated successfully!',
+      'widgets.addToHomeScreen': 'Add to Home Screen',
+      'widgets.howToAdd': 'How to add?',
+      'widgets.guideTitle': 'Add Widget to Home Screen',
+      'widgets.guideIos': 'iOS (iPhone): Long press empty space on home screen, tap «+» in top corner and select ZHOSPAR.',
+      'widgets.guideAndroid': 'Android: Long press home screen, open «Widgets» menu and drag ZHOSPAR to your home screen.',
+      'widgets.pinSent': 'Home screen pin request sent!',
+
+      // winter
+      'winter.title': 'Winter Atmosphere',
+      'winter.desc': 'Festive snowfall and holiday hat on greeting',
     },
   };
 

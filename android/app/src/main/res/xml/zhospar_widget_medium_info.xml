@@ -5,6 +5,8 @@
     android:targetCellWidth="4"
     android:targetCellHeight="2"
     android:updatePeriodMillis="1800000"
+    android:description="@string/widget_medium_desc"
+    android:previewLayout="@layout/zhospar_widget_medium"
     android:initialLayout="@layout/zhospar_widget_medium"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen" />

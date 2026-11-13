@@ -17,10 +17,12 @@ import '../../state/gamification_provider.dart';
 import '../../state/task_provider.dart';
 import '../../state/theme_provider.dart';
 import '../shell/widgets/top_app_bar.dart';
+import '../../state/winter_theme_provider.dart';
 import 'widgets/achievements_card.dart';
 import 'widgets/home_widget_preview_card.dart';
 import 'widgets/onboarding_dialog.dart';
 import 'widgets/reminders_card.dart';
+import 'widgets/winter_card.dart';
 
 class SettingsScreen extends StatelessWidget {
   final bool embedded;
@@ -84,6 +86,7 @@ class SettingsScreen extends StatelessWidget {
     final auth = Provider.of<AuthProvider>(context);
     final gamification = Provider.of<GamificationProvider>(context);
     final reminderService = Provider.of<ReminderService>(context);
+    final winter = Provider.of<WinterThemeProvider>(context);
     final taskProvider = Provider.of<TaskProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary =
@@ -491,6 +494,15 @@ class SettingsScreen extends StatelessWidget {
                   child: HomeWidgetPreviewCard(
                     lang: lang,
                     taskProvider: taskProvider,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Winter Atmosphere & Snow physics
+                SpringPopIn(
+                  child: WinterCard(
+                    lang: lang,
+                    winter: winter,
                   ),
                 ),
                 const SizedBox(height: 16),

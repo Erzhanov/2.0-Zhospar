@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ZHOSPAR</string>
+    <string name="widget_medium_name">ZHOSPAR — Бүгінгі жоспар</string>
+    <string name="widget_medium_desc">Күндік тапсырмалар тізімі, прогресс және серия күні</string>
+    <string name="widget_small_name">ZHOSPAR — Прогресс</string>
+    <string name="widget_small_desc">Бүгінгі орындалу пайызы және серия күні</string>
+</resources>

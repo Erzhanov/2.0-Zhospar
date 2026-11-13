@@ -9,10 +9,12 @@ import '../../shared/widgets/app_card.dart';
 import '../../shared/widgets/floating_motion.dart';
 import '../../shared/widgets/glass_surface.dart';
 import '../../shared/widgets/mobile_page_container.dart';
+import '../../shared/widgets/santa_hat.dart';
 import '../../shared/widgets/tap_scale.dart';
 import '../../state/auth_provider.dart';
 import '../../state/gamification_provider.dart';
 import '../../state/task_provider.dart';
+import '../../state/winter_theme_provider.dart';
 import 'widgets/day_selector_bar.dart';
 import 'widgets/task_form_sheet.dart';
 import 'widgets/task_item_widget.dart';
@@ -211,15 +213,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          '${lang.t('dashboard.hello')}, $userName 👋',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
-                          ),
+                        Consumer<WinterThemeProvider>(
+                          builder: (context, winter, _) {
+                            return Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Text(
+                                  '${lang.t('dashboard.hello')}, $userName 👋',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                if (winter.isWinterEnabled)
+                                  const Positioned(
+                                    top: -11,
+                                    left: -4,
+                                    child: SantaHat(size: 19),
+                                  ),
+                              ],
+                            );
+                          },
                         ),
                         const SizedBox(height: 3),
                         Text(

@@ -12,6 +12,7 @@ import '../state/music_provider.dart';
 import '../state/task_provider.dart';
 import '../state/theme_provider.dart';
 import '../state/timer_provider.dart';
+import '../state/winter_theme_provider.dart';
 import 'router/app_router.dart';
 import 'router/app_routes.dart';
 
@@ -38,6 +39,7 @@ class ZhosparRoot extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => TimerProvider()),
         ChangeNotifierProvider(create: (_) => MusicProvider()),
+        ChangeNotifierProvider(create: (_) => WinterThemeProvider()),
       ],
       child: const ZhosparApp(),
     );

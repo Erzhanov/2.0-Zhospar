@@ -90,4 +90,16 @@ class WidgetDataService {
       };
     }
   }
+
+  /// Request native OS to pin widget directly to Home Screen (supported on Android 8.0+)
+  static Future<bool> requestPinWidget({String size = 'medium'}) async {
+    try {
+      final res = await _platformChannel
+          .invokeMethod<bool>('pinWidget', {'size': size})
+          .timeout(const Duration(milliseconds: 500));
+      return res ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
 }
